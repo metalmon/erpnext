@@ -139,8 +139,8 @@ class StockReconciliation(StockController):
 						"voucher_type": self.doctype,
 						"voucher_no": self.name,
 						"voucher_detail_no": row.name,
-						"qty": row.current_qty,
-						"type_of_transaction": "Outward",
+						"qty": row.current_qty * -1,
+						"type_of_transaction": "Outward" if row.current_qty > 0 else "Inward",
 						"company": self.company,
 						"is_rejected": 0,
 						"serial_nos": get_serial_nos(row.current_serial_no)
@@ -1093,6 +1093,7 @@ class StockReconciliation(StockController):
 					posting_date=doc.posting_date,
 					posting_time=doc.posting_time,
 					ignore_voucher_nos=[doc.voucher_no],
+					for_stock_levels=True,
 				)
 				or 0
 			) * -1
@@ -1366,6 +1367,7 @@ def get_stock_balance_for(
 				posting_date=posting_date,
 				posting_time=posting_time,
 				for_stock_levels=True,
+				consider_negative_batches=True,
 			)
 			or 0
 		)
