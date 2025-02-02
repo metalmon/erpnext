@@ -29,7 +29,11 @@ from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category 
 )
 from erpnext.accounts.general_ledger import get_round_off_account_and_cost_center
 from erpnext.accounts.party import get_due_date, get_party_account, get_party_details
-from erpnext.accounts.utils import cancel_exchange_gain_loss_journal, get_account_currency
+from erpnext.accounts.utils import (
+	cancel_exchange_gain_loss_journal,
+	get_account_currency,
+	update_voucher_outstanding,
+)
 from erpnext.assets.doctype.asset.depreciation import (
 	depreciate_asset,
 	get_gl_entries_on_asset_disposal,
@@ -206,7 +210,6 @@ class SalesInvoice(SellingController):
 		terms: DF.TextEditor | None
 		territory: DF.Link | None
 		timesheets: DF.Table[SalesInvoiceTimesheet]
-		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
 		total_advance: DF.Currency
@@ -323,9 +326,7 @@ class SalesInvoice(SellingController):
 		self.set_against_income_account()
 		self.validate_time_sheets_are_submitted()
 		self.validate_multiple_billing("Delivery Note", "dn_detail", "amount")
-		if not self.is_return:
-			self.validate_serial_numbers()
-		else:
+		if self.is_return:
 			self.timesheets = []
 		self.update_packing_list()
 		self.set_billing_hours_and_amount()
@@ -364,7 +365,7 @@ class SalesInvoice(SellingController):
 					if self.update_stock:
 						frappe.throw(_("'Update Stock' cannot be checked for fixed asset sale"))
 
-					elif asset.status in ("Scrapped", "Cancelled", "Capitalized", "Decapitalized") or (
+					elif asset.status in ("Scrapped", "Cancelled", "Capitalized") or (
 						asset.status == "Sold" and not self.is_return
 					):
 						frappe.throw(
@@ -506,7 +507,7 @@ class SalesInvoice(SellingController):
 				frappe.throw(_("Total payments amount can't be greater than {}").format(-invoice_total))
 
 	def validate_pos_paid_amount(self):
-		if len(self.payments) == 0 and self.is_pos:
+		if len(self.payments) == 0 and self.is_pos and flt(self.grand_total) > 0:
 			frappe.throw(_("At least one mode of payment is required for POS invoice."))
 
 	def check_if_consolidated_invoice(self):
@@ -1010,9 +1011,9 @@ class SalesInvoice(SellingController):
 	def validate_pos(self):
 		if self.is_return:
 			invoice_total = self.rounded_total or self.grand_total
-			if flt(self.paid_amount) + flt(self.write_off_amount) - flt(invoice_total) > 1.0 / (
-				10.0 ** (self.precision("grand_total") + 1.0)
-			):
+			if abs(flt(self.paid_amount)) + abs(flt(self.write_off_amount)) - abs(
+				flt(invoice_total)
+			) > 1.0 / (10.0 ** (self.precision("grand_total") + 1.0)):
 				frappe.throw(_("Paid amount + Write Off Amount can not be greater than Grand Total"))
 
 	def validate_warehouse(self):
@@ -1092,13 +1093,16 @@ class SalesInvoice(SellingController):
 					timesheet.billing_amount = ts_doc.total_billable_amount
 
 	def update_timesheet_billing_for_project(self):
-		if not self.timesheets and self.project:
-			self.add_timesheet_data()
-		else:
+		if self.timesheets:
 			self.calculate_billing_amount_for_timesheet()
 
-	@frappe.whitelist()
+	@frappe.whitelist(methods=["PUT"])
 	def add_timesheet_data(self):
+		if not self.timesheets and self.project:
+			self._add_timesheet_data()
+			self.save()
+
+	def _add_timesheet_data(self):
 		self.set("timesheets", [])
 		if self.project:
 			for data in get_projectwise_timesheet_data(self.project):
@@ -1192,14 +1196,14 @@ class SalesInvoice(SellingController):
 				make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 
 			if update_outstanding == "No":
-				from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
-
-				update_outstanding_amt(
-					self.debit_to,
-					"Customer",
-					self.customer,
-					self.doctype,
-					self.return_against if cint(self.is_return) and self.return_against else self.name,
+				update_voucher_outstanding(
+					voucher_type=self.doctype,
+					voucher_no=self.return_against
+					if cint(self.is_return) and self.return_against
+					else self.name,
+					account=self.debit_to,
+					party_type="Customer",
+					party=self.customer,
 				)
 
 		elif self.docstatus == 2 and cint(self.update_stock) and cint(auto_accounting_for_stock):
@@ -1702,14 +1706,6 @@ class SalesInvoice(SellingController):
 	def on_recurring(self, reference_doc, auto_repeat_doc):
 		self.set("write_off_amount", reference_doc.get("write_off_amount"))
 		self.due_date = None
-
-	def validate_serial_numbers(self):
-		"""
-		validate serial number agains Delivery Note and Sales Invoice
-		"""
-		for item in self.items:
-			item.set_serial_no_against_delivery_note()
-			item.validate_serial_against_delivery_note()
 
 	def update_project(self):
 		unique_projects = list(set([d.project for d in self.get("items") if d.project]))

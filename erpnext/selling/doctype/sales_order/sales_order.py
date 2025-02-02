@@ -175,7 +175,6 @@ class SalesOrder(SellingController):
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		territory: DF.Link | None
-		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
 		total_commission: DF.Currency
@@ -239,6 +238,11 @@ class SalesOrder(SellingController):
 			self.advance_payment_status = "Not Requested"
 
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
+		self.enable_auto_reserve_stock()
+
+	def enable_auto_reserve_stock(self):
+		if self.is_new() and frappe.db.get_single_value("Stock Settings", "auto_reserve_stock"):
+			self.reserve_stock = 1
 
 	def validate_po(self):
 		# validate p.o date v/s delivery date
@@ -884,7 +888,11 @@ def make_material_request(source_name, target_doc=None):
 			},
 			"Sales Order Item": {
 				"doctype": "Material Request Item",
-				"field_map": {"name": "sales_order_item", "parent": "sales_order"},
+				"field_map": {
+					"name": "sales_order_item",
+					"parent": "sales_order",
+					"delivery_date": "required_by",
+				},
 				"condition": lambda item: not frappe.db.exists(
 					"Product Bundle", {"name": item.item_code, "disabled": 0}
 				)
@@ -1379,7 +1387,8 @@ def make_purchase_order_for_default_supplier(source_name, selected_items=None, t
 					"postprocess": update_item,
 					"condition": lambda doc: doc.ordered_qty < doc.stock_qty
 					and doc.supplier == supplier
-					and doc.item_code in items_to_map,
+					and doc.item_code in items_to_map
+					and doc.delivered_by_supplier == 1,
 				},
 			},
 			target_doc,
@@ -1523,6 +1532,7 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 	)
 
 	set_delivery_date(doc.items, source_name)
+	doc.set_onload("load_after_mapping", False)
 
 	return doc
 

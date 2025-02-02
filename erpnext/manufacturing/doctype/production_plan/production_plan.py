@@ -4,6 +4,7 @@
 
 import copy
 import json
+from collections import defaultdict
 
 import frappe
 from frappe import _, msgprint
@@ -722,6 +723,9 @@ class ProductionPlan(Document):
 		if not wo_list:
 			frappe.msgprint(_("No Work Orders were created"))
 
+		if not po_list:
+			frappe.msgprint(_("No Purchase Orders were created"))
+
 	def make_work_order_for_finished_goods(self, wo_list, default_warehouses):
 		items_data = self.get_production_items()
 
@@ -780,6 +784,21 @@ class ProductionPlan(Document):
 	def make_subcontracted_purchase_order(self, subcontracted_po, purchase_orders):
 		if not subcontracted_po:
 			return
+
+		def calculate_sub_assembly_items():
+			items_to_remove = defaultdict(list)
+			for supplier, items in subcontracted_po.items():
+				for item in items:
+					if item.qty == item.received_qty:
+						items_to_remove[supplier].append(item)
+					elif item.received_qty:
+						item.qty -= item.received_qty
+
+				subcontracted_po[supplier] = [item for item in items if item not in items_to_remove[supplier]]
+
+			return {key: value for key, value in subcontracted_po.items() if value}
+
+		subcontracted_po = calculate_sub_assembly_items()
 
 		for supplier, po_list in subcontracted_po.items():
 			po = frappe.new_doc("Purchase Order")
@@ -847,13 +866,31 @@ class ProductionPlan(Document):
 		except OverProductionError:
 			pass
 
+	def validate_mr_subcontracted(self):
+		for row in self.mr_items:
+			if row.material_request_type == "Subcontracting":
+				if not frappe.db.get_value("Item", row.item_code, "is_sub_contracted_item"):
+					frappe.throw(
+						_("Item {0} is not a subcontracted item").format(row.item_code),
+						title=_("Invalid Item"),
+					)
+
 	@frappe.whitelist()
 	def make_material_request(self):
+		self.validate_mr_subcontracted()
+
 		"""Create Material Requests grouped by Sales Order and Material Request Type"""
 		material_request_list = []
 		material_request_map = {}
 
+		if all([item.requested_qty == item.quantity for item in self.mr_items]):
+			msgprint(_("All items are already requested"))
+			return
+
 		for item in self.mr_items:
+			if item.quantity == item.requested_qty:
+				continue
+
 			item_doc = frappe.get_cached_doc("Item", item.item_code)
 
 			material_request_type = item.material_request_type or item_doc.default_material_request_type
@@ -887,7 +924,7 @@ class ProductionPlan(Document):
 					"from_warehouse": item.from_warehouse
 					if material_request_type == "Material Transfer"
 					else None,
-					"qty": item.quantity,
+					"qty": item.quantity - item.requested_qty,
 					"schedule_date": schedule_date,
 					"warehouse": item.warehouse,
 					"sales_order": item.sales_order,
@@ -937,8 +974,14 @@ class ProductionPlan(Document):
 
 			bom_data = []
 
-			warehouse = (self.sub_assembly_warehouse) if self.skip_available_sub_assembly_item else None
-			get_sub_assembly_items(row.bom_no, bom_data, row.planned_qty, self.company, warehouse=warehouse)
+			get_sub_assembly_items(
+				row.bom_no,
+				bom_data,
+				row.planned_qty,
+				self.company,
+				warehouse=self.sub_assembly_warehouse,
+				skip_available_sub_assembly_item=self.skip_available_sub_assembly_item,
+			)
 			self.set_sub_assembly_items_based_on_level(row, bom_data, manufacturing_type)
 			sub_assembly_items_store.extend(bom_data)
 
@@ -1047,7 +1090,7 @@ class ProductionPlan(Document):
 			filters={
 				"production_plan": self.name,
 				"status": ("not in", ["Closed", "Stopped"]),
-				"docstatus": ("<", 2),
+				"docstatus": 1,
 			},
 			fields="status",
 			pluck="status",
@@ -1729,14 +1772,23 @@ def get_item_data(item_code):
 	}
 
 
-def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=None, indent=0):
+def get_sub_assembly_items(
+	bom_no,
+	bom_data,
+	to_produce_qty,
+	company,
+	warehouse=None,
+	indent=0,
+	skip_available_sub_assembly_item=False,
+):
 	data = get_bom_children(parent=bom_no)
 	for d in data:
 		if d.expandable:
 			parent_item_code = frappe.get_cached_value("BOM", bom_no, "item")
 			stock_qty = (d.stock_qty / d.parent_bom_qty) * flt(to_produce_qty)
 
-			if warehouse:
+			bin_details = frappe._dict()
+			if skip_available_sub_assembly_item:
 				bin_details = get_bin_details(d, company, for_warehouse=warehouse)
 
 				for _bin_dict in bin_details:
@@ -1746,11 +1798,14 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=
 							continue
 						else:
 							stock_qty = stock_qty - _bin_dict.projected_qty
+			elif warehouse:
+				bin_details = get_bin_details(d, company, for_warehouse=warehouse)
 
 			if stock_qty > 0:
 				bom_data.append(
 					frappe._dict(
 						{
+							"actual_qty": bin_details[0].get("actual_qty", 0) if bin_details else 0,
 							"parent_item_code": parent_item_code,
 							"description": d.description,
 							"production_item": d.item_code,
@@ -1768,7 +1823,13 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=
 
 				if d.value:
 					get_sub_assembly_items(
-						d.value, bom_data, stock_qty, company, warehouse, indent=indent + 1
+						d.value,
+						bom_data,
+						stock_qty,
+						company,
+						warehouse,
+						indent=indent + 1,
+						skip_available_sub_assembly_item=skip_available_sub_assembly_item,
 					)
 
 

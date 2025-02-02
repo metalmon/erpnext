@@ -122,6 +122,12 @@ frappe.ui.form.on("Material Request", {
 						() => frm.events.make_purchase_order(frm),
 						__("Create")
 					);
+				} else if (frm.doc.material_request_type === "Subcontracting") {
+					frm.add_custom_button(
+						__("Subcontracted Purchase Order"),
+						() => frm.events.make_purchase_order(frm),
+						__("Create")
+					);
 				}
 			}
 
@@ -330,7 +336,7 @@ frappe.ui.form.on("Material Request", {
 					default: 1,
 				},
 			],
-			primary_action_label: "Get Items",
+			primary_action_label: __("Get Items"),
 			primary_action(values) {
 				if (!values) return;
 				values["company"] = frm.doc.company;

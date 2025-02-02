@@ -71,12 +71,16 @@ class PaymentEntry(AccountsController):
 			PaymentEntryReference,
 		)
 
+		advance_reconciliation_takes_effect_on: DF.Literal[
+			"Advance Payment Date", "Oldest Of Invoice Or Advance", "Reconciliation Date"
+		]
 		amended_from: DF.Link | None
 		apply_tax_withholding_amount: DF.Check
 		auto_repeat: DF.Link | None
 		bank: DF.ReadOnly | None
 		bank_account: DF.Link | None
 		bank_account_no: DF.ReadOnly | None
+		base_in_words: DF.SmallText | None
 		base_paid_amount: DF.Currency
 		base_paid_amount_after_tax: DF.Currency
 		base_received_amount: DF.Currency
@@ -92,6 +96,8 @@ class PaymentEntry(AccountsController):
 		custom_remarks: DF.Check
 		deductions: DF.Table[PaymentEntryDeduction]
 		difference_amount: DF.Currency
+		in_words: DF.SmallText | None
+		is_opening: DF.Literal["No", "Yes"]
 		letter_head: DF.Link | None
 		mode_of_payment: DF.Link | None
 		naming_series: DF.Literal["ACC-PAY-.YYYY.-"]
@@ -119,6 +125,7 @@ class PaymentEntry(AccountsController):
 		purchase_taxes_and_charges_template: DF.Link | None
 		received_amount: DF.Currency
 		received_amount_after_tax: DF.Currency
+		reconcile_on_advance_payment_date: DF.Check
 		reference_date: DF.Date | None
 		reference_no: DF.Data | None
 		references: DF.Table[PaymentEntryReference]
@@ -635,7 +642,7 @@ class PaymentEntry(AccountsController):
 			if d.reference_doctype not in valid_reference_doctypes:
 				frappe.throw(
 					_("Reference Doctype must be one of {0}").format(
-						comma_or(_(d) for d in valid_reference_doctypes)
+						comma_or([_(d) for d in valid_reference_doctypes])
 					)
 				)
 
@@ -1500,16 +1507,26 @@ class PaymentEntry(AccountsController):
 			"voucher_detail_no": invoice.name,
 		}
 
-		if self.reconcile_on_advance_payment_date:
-			posting_date = self.posting_date
+		if invoice.reconcile_effect_on:
+			posting_date = invoice.reconcile_effect_on
 		else:
-			date_field = "posting_date"
-			if invoice.reference_doctype in ["Sales Order", "Purchase Order"]:
-				date_field = "transaction_date"
-			posting_date = frappe.db.get_value(invoice.reference_doctype, invoice.reference_name, date_field)
-
-			if getdate(posting_date) < getdate(self.posting_date):
+			# For backwards compatibility
+			# Supporting reposting on payment entries reconciled before select field introduction
+			if self.advance_reconciliation_takes_effect_on == "Advance Payment Date":
 				posting_date = self.posting_date
+			elif self.advance_reconciliation_takes_effect_on == "Oldest Of Invoice Or Advance":
+				date_field = "posting_date"
+				if invoice.reference_doctype in ["Sales Order", "Purchase Order"]:
+					date_field = "transaction_date"
+				posting_date = frappe.db.get_value(
+					invoice.reference_doctype, invoice.reference_name, date_field
+				)
+
+				if getdate(posting_date) < getdate(self.posting_date):
+					posting_date = self.posting_date
+			elif self.advance_reconciliation_takes_effect_on == "Reconciliation Date":
+				posting_date = nowdate()
+			frappe.db.set_value("Payment Entry Reference", invoice.name, "reconcile_effect_on", posting_date)
 
 		dr_or_cr, account = self.get_dr_and_account_for_advances(invoice)
 		args_dict["account"] = account
@@ -1664,6 +1681,14 @@ class PaymentEntry(AccountsController):
 			return self.paid_to
 		elif self.payment_type in ("Pay", "Internal Transfer"):
 			return self.paid_from
+
+	def get_value_in_transaction_currency(self, account_currency, gl_dict, field):
+		company_currency = erpnext.get_company_currency(self.company)
+		conversion_rate = self.target_exchange_rate
+		if self.paid_from_account_currency != company_currency:
+			conversion_rate = self.source_exchange_rate
+
+		return flt(gl_dict.get(field, 0) / (conversion_rate or 1))
 
 	def update_advance_paid(self):
 		if self.payment_type in ("Receive", "Pay") and self.party:
@@ -2918,7 +2943,7 @@ def get_payment_entry(
 
 	if pe.party_type in ["Customer", "Supplier"]:
 		bank_account = get_party_bank_account(pe.party_type, pe.party)
-		pe.set("bank_account", bank_account)
+		pe.set("party_bank_account", bank_account)
 		pe.set_bank_account_data()
 
 	# only Purchase Invoice can be blocked individually

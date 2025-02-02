@@ -383,6 +383,39 @@ class PurchaseReceipt(BuyingController):
 		self.repost_future_sle_and_gle()
 		self.set_consumed_qty_in_subcontract_order()
 		self.reserve_stock_for_sales_order()
+		self.update_received_qty_if_from_pp()
+
+	def update_received_qty_if_from_pp(self):
+		from frappe.query_builder.functions import Sum
+
+		items_from_po = [item.purchase_order_item for item in self.items if item.purchase_order_item]
+		if items_from_po:
+			table = frappe.qb.DocType("Purchase Order Item")
+			subquery = (
+				frappe.qb.from_(table)
+				.select(table.production_plan_sub_assembly_item)
+				.distinct()
+				.where(table.name.isin(items_from_po) & table.production_plan_sub_assembly_item.isnotnull())
+			)
+			result = subquery.run(as_dict=True)
+			if result:
+				result = [item.production_plan_sub_assembly_item for item in result]
+				query = (
+					frappe.qb.from_(table)
+					.select(
+						table.production_plan_sub_assembly_item,
+						Sum(table.received_qty / (table.qty / table.fg_item_qty)).as_("received_qty"),
+					)
+					.where(table.production_plan_sub_assembly_item.isin(result))
+					.groupby(table.production_plan_sub_assembly_item)
+				)
+				for row in query.run(as_dict=True):
+					frappe.set_value(
+						"Production Plan Sub Assembly Item",
+						row.production_plan_sub_assembly_item,
+						"received_qty",
+						row.received_qty,
+					)
 
 	def check_next_docstatus(self):
 		submit_rv = frappe.db.sql(
@@ -424,6 +457,7 @@ class PurchaseReceipt(BuyingController):
 		)
 		self.delete_auto_created_batches()
 		self.set_consumed_qty_in_subcontract_order()
+		self.update_received_qty_if_from_pp()
 
 	def get_gl_entries(self, warehouse_account=None, via_landed_cost_voucher=False):
 		from erpnext.accounts.general_ledger import process_gl_map
@@ -911,12 +945,17 @@ class PurchaseReceipt(BuyingController):
 				)
 
 	def enable_recalculate_rate_in_sles(self):
+		rejected_warehouses = frappe.get_all(
+			"Purchase Receipt Item", filters={"parent": self.name}, pluck="rejected_warehouse"
+		)
+
 		sle_table = frappe.qb.DocType("Stock Ledger Entry")
 		(
 			frappe.qb.update(sle_table)
 			.set(sle_table.recalculate_rate, 1)
 			.where(sle_table.voucher_no == self.name)
 			.where(sle_table.voucher_type == "Purchase Receipt")
+			.where(sle_table.warehouse.notin(rejected_warehouses))
 		).run()
 
 
@@ -1169,6 +1208,9 @@ def make_purchase_invoice(source_name, target_doc=None, args=None):
 			return pending_qty, 0
 
 		returned_qty = flt(returned_qty_map.get(item_row.name, 0))
+		if item_row.rejected_qty and returned_qty:
+			returned_qty -= item_row.rejected_qty
+
 		if returned_qty:
 			if returned_qty >= pending_qty:
 				pending_qty = 0
