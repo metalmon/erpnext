@@ -40,7 +40,7 @@ erpnext.PointOfSale.Controller = class {
 				in_list_view: 1,
 				label: __("Opening Amount"),
 				options: "company:company_currency",
-				change: function () {
+				onchange: function () {
 					dialog.fields_dict.balance_details.df.data.some((d) => {
 						if (d.idx == this.doc.idx) {
 							d.opening_amount = this.value;
@@ -459,6 +459,8 @@ erpnext.PointOfSale.Controller = class {
 							() => this.make_return_invoice(doc),
 							() => this.cart.load_invoice(),
 							() => this.item_selector.toggle_component(true),
+							() => this.item_selector.resize_selector(false),
+							() => this.item_details.toggle_component(false),
 						]);
 					});
 				},
@@ -469,6 +471,8 @@ erpnext.PointOfSale.Controller = class {
 						() => this.frm.call("reset_mode_of_payments"),
 						() => this.cart.load_invoice(),
 						() => this.item_selector.toggle_component(true),
+						() => this.item_selector.resize_selector(false),
+						() => this.item_details.toggle_component(false),
 					]);
 				},
 				delete_order: (name) => {

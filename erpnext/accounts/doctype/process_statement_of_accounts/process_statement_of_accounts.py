@@ -246,7 +246,6 @@ def get_html(doc, filters, entry, col, res, ageing):
 		from frappe.www.printview import get_letter_head
 
 		letter_head = get_letter_head(doc, 0)
-
 	html = frappe.render_template(
 		template_path,
 		{
@@ -262,7 +261,6 @@ def get_html(doc, filters, entry, col, res, ageing):
 			else None,
 		},
 	)
-
 	html = frappe.render_template(
 		base_template_path,
 		{"body": html, "css": get_print_style(), "title": "Statement For " + entry.customer},

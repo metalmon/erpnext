@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 import frappe
 from frappe import _, _dict, bold
 from frappe.model.document import Document
+from frappe.model.naming import make_autoname
 from frappe.query_builder.functions import CombineDatetime, Sum
 from frappe.utils import (
 	add_days,
@@ -55,9 +56,7 @@ class SerialandBatchBundle(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from erpnext.stock.doctype.serial_and_batch_entry.serial_and_batch_entry import (
-			SerialandBatchEntry,
-		)
+		from erpnext.stock.doctype.serial_and_batch_entry.serial_and_batch_entry import SerialandBatchEntry
 
 		amended_from: DF.Link | None
 		avg_rate: DF.Float
@@ -70,7 +69,7 @@ class SerialandBatchBundle(Document):
 		item_code: DF.Link
 		item_group: DF.Link | None
 		item_name: DF.Data | None
-		naming_series: DF.Literal["SABB-.########"]
+		naming_series: DF.Literal["", "SABB-.########"]
 		posting_date: DF.Date | None
 		posting_time: DF.Time | None
 		returned_against: DF.Data | None
@@ -82,6 +81,24 @@ class SerialandBatchBundle(Document):
 		voucher_type: DF.Link
 		warehouse: DF.Link | None
 	# end: auto-generated types
+
+	def autoname(self):
+		if frappe.db.get_single_value(
+			"Stock Settings", "set_serial_and_batch_bundle_naming_based_on_naming_series"
+		):
+			if not self.naming_series:
+				frappe.throw(_("Naming Series is mandatory"))
+
+			naming_series = self.naming_series
+			if "#" not in naming_series:
+				naming_series += ".#####"
+
+			self.name = make_autoname(self.naming_series)
+		else:
+			try:
+				self.name = frappe.generate_hash(length=20)
+			except frappe.DuplicateEntryError:
+				self.autoname()
 
 	def validate(self):
 		if self.docstatus == 1 and self.voucher_detail_no:

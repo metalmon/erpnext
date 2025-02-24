@@ -782,7 +782,6 @@ class TestPOSInvoice(IntegrationTestCase):
 
 		# POS Invoice 1, for the batch without bundle
 		pos_inv1 = create_pos_invoice(item="_BATCH ITEM Test For Reserve", rate=300, qty=15, do_not_save=1)
-
 		pos_inv1.items[0].batch_no = batch_no
 		pos_inv1.save()
 		pos_inv1.submit()

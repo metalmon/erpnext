@@ -184,7 +184,7 @@ erpnext.PointOfSale.ItemCart = class {
 		});
 
 		this.$component.on("click", ".checkout-btn", async function () {
-			if ($(this).attr("style").indexOf("--blue-500") == -1) return;
+			if ($(this).attr("style").indexOf("--btn-primary") == -1) return;
 
 			await me.events.checkout();
 			me.toggle_checkout_btn(false);
@@ -702,12 +702,14 @@ erpnext.PointOfSale.ItemCart = class {
 		if (toggle) {
 			this.$add_discount_elem.css("display", "flex");
 			this.$cart_container.find(".checkout-btn").css({
-				"background-color": "var(--blue-500)",
+				"background-color": "var(--btn-primary)",
+				color: "var(--neutral)",
 			});
 		} else {
 			this.$add_discount_elem.css("display", "none");
 			this.$cart_container.find(".checkout-btn").css({
-				"background-color": "var(--blue-200)",
+				"background-color": "var(--control-bg)",
+				color: "",
 			});
 		}
 	}
@@ -748,6 +750,7 @@ erpnext.PointOfSale.ItemCart = class {
 				frappe.utils.play_sound("error");
 				return;
 			}
+			this.highlight_numpad_btn($btn, current_action);
 
 			if (first_click_event || field_to_edit_changed) {
 				this.prev_action = current_action;
@@ -793,7 +796,6 @@ erpnext.PointOfSale.ItemCart = class {
 			this.numpad_value = current_action;
 		}
 
-		this.highlight_numpad_btn($btn, current_action);
 		this.events.numpad_event(this.numpad_value, this.prev_action);
 	}
 

@@ -41,6 +41,7 @@ erpnext.PointOfSale.Payment = class {
 	}
 
 	make_invoice_fields_control() {
+		this.reqd_invoice_fields = [];
 		frappe.db.get_doc("POS Settings", undefined).then((doc) => {
 			const fields = doc.invoice_fields;
 			if (!fields.length) return;
@@ -66,6 +67,9 @@ erpnext.PointOfSale.Payment = class {
 							}
 						},
 					};
+				}
+				if (df.reqd && (df.fieldtype !== "Button" || !df.read_only)) {
+					this.reqd_invoice_fields.push({ fieldname: df.fieldname, label: df.label });
 				}
 
 				this[`${df.fieldname}_field`] = frappe.ui.form.make_control({
@@ -204,6 +208,10 @@ erpnext.PointOfSale.Payment = class {
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
 
+			if (!this.validate_reqd_invoice_fields()) {
+				return;
+			}
+
 			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100)) {
 				const message = items.length
 					? __("You cannot submit the order without payment.")
@@ -332,11 +340,19 @@ erpnext.PointOfSale.Payment = class {
 		// pass
 	}
 
-	render_payment_section() {
+	async render_payment_section() {
 		this.render_payment_mode_dom();
 		this.make_invoice_fields_control();
 		this.update_totals_section();
-		this.focus_on_default_mop();
+		let r = await frappe.db.get_value(
+			"POS Profile",
+			this.frm.doc.pos_profile,
+			"disable_grand_total_to_default_mop"
+		);
+
+		if (!r.message.disable_grand_total_to_default_mop) {
+			this.focus_on_default_mop();
+		}
 	}
 
 	after_render() {
@@ -619,5 +635,21 @@ erpnext.PointOfSale.Payment = class {
 			.replace(/[^\p{L}\p{N}_-]/gu, "")
 			.replace(/^[^_a-zA-Z\p{L}]+/u, "")
 			.toLowerCase();
+	}
+
+	validate_reqd_invoice_fields() {
+		const doc = this.events.get_frm().doc;
+		let validation_flag = true;
+		for (let field of this.reqd_invoice_fields) {
+			if (!doc[field.fieldname]) {
+				validation_flag = false;
+				frappe.show_alert({
+					message: __("{0} is a mandatory field.", [field.label]),
+					indicator: "orange",
+				});
+				frappe.utils.play_sound("error");
+			}
+		}
+		return validation_flag;
 	}
 };
