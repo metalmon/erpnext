@@ -108,15 +108,12 @@ class PaymentEntry(AccountsController):
 		paid_amount: DF.Currency
 		paid_amount_after_tax: DF.Currency
 		paid_from: DF.Link
-		paid_from_account_balance: DF.Currency
 		paid_from_account_currency: DF.Link
 		paid_from_account_type: DF.Data | None
 		paid_to: DF.Link
-		paid_to_account_balance: DF.Currency
 		paid_to_account_currency: DF.Link
 		paid_to_account_type: DF.Data | None
 		party: DF.DynamicLink | None
-		party_balance: DF.Currency
 		party_bank_account: DF.Link | None
 		party_name: DF.Data | None
 		party_type: DF.Link | None
@@ -506,7 +503,6 @@ class PaymentEntry(AccountsController):
 		if self.payment_type == "Internal Transfer":
 			for field in (
 				"party",
-				"party_balance",
 				"total_allocated_amount",
 				"base_total_allocated_amount",
 				"unallocated_amount",
@@ -534,25 +530,19 @@ class PaymentEntry(AccountsController):
 				)
 			else:
 				complete_contact_details(self)
-			if not self.party_balance:
-				self.party_balance = get_balance_on(
-					party_type=self.party_type, party=self.party, date=self.posting_date, company=self.company
-				)
 
 			if not self.party_account:
 				party_account = get_party_account(self.party_type, self.party, self.company)
 				self.set(self.party_account_field, party_account)
 				self.party_account = party_account
 
-		if self.paid_from and not self.paid_from_account_currency and not self.paid_from_account_balance:
+		if self.paid_from and not self.paid_from_account_currency:
 			acc = get_account_details(self.paid_from, self.posting_date, self.cost_center)
 			self.paid_from_account_currency = acc.account_currency
-			self.paid_from_account_balance = acc.account_balance
 
-		if self.paid_to and not self.paid_to_account_currency and not self.paid_to_account_balance:
+		if self.paid_to and not self.paid_to_account_currency:
 			acc = get_account_details(self.paid_to, self.posting_date, self.cost_center)
 			self.paid_to_account_currency = acc.account_currency
-			self.paid_to_account_balance = acc.account_balance
 
 		self.party_account_currency = (
 			self.paid_from_account_currency
@@ -1321,15 +1311,22 @@ class PaymentEntry(AccountsController):
 
 		self.set("remarks", "\n".join(remarks))
 
+	def set_transaction_currency_and_rate(self):
+		company_currency = erpnext.get_company_currency(self.company)
+		self.transaction_currency = company_currency
+		self.transaction_exchange_rate = 1
+
+		if self.paid_from_account_currency != company_currency:
+			self.transaction_currency = self.paid_from_account_currency
+			self.transaction_exchange_rate = self.source_exchange_rate
+		elif self.paid_to_account_currency != company_currency:
+			self.transaction_currency = self.paid_to_account_currency
+			self.transaction_exchange_rate = self.target_exchange_rate
+
 	def build_gl_map(self):
 		if self.payment_type in ("Receive", "Pay") and not self.get("party_account_field"):
 			self.setup_party_account_field()
-
-		company_currency = erpnext.get_company_currency(self.company)
-		if self.paid_from_account_currency != company_currency:
-			self.currency = self.paid_from_account_currency
-		elif self.paid_to_account_currency != company_currency:
-			self.currency = self.paid_to_account_currency
+		self.set_transaction_currency_and_rate()
 
 		gl_entries = []
 		self.add_party_gl_entries(gl_entries)
@@ -1410,6 +1407,9 @@ class PaymentEntry(AccountsController):
 						"cost_center": cost_center,
 						dr_or_cr + "_in_account_currency": d.allocated_amount,
 						dr_or_cr: allocated_amount_in_company_currency,
+						dr_or_cr + "_in_transaction_currency": d.allocated_amount
+						if self.transaction_currency == self.party_account_currency
+						else allocated_amount_in_company_currency / self.transaction_exchange_rate,
 					},
 					item=self,
 				)
@@ -1454,6 +1454,9 @@ class PaymentEntry(AccountsController):
 						"account_currency": self.party_account_currency,
 						"cost_center": self.cost_center,
 						dr_or_cr + "_in_account_currency": self.unallocated_amount,
+						dr_or_cr + "_in_transaction_currency": self.unallocated_amount
+						if self.party_account_currency == self.transaction_currency
+						else base_unallocated_amount / self.transaction_exchange_rate,
 						dr_or_cr: base_unallocated_amount,
 					},
 					item=self,
@@ -1471,6 +1474,7 @@ class PaymentEntry(AccountsController):
 	def make_advance_gl_entries(
 		self, entry: object | dict = None, cancel: bool = 0, update_outstanding: str = "Yes"
 	):
+		self.set_transaction_currency_and_rate()
 		gl_entries = []
 		self.add_advance_gl_entries(gl_entries, entry)
 
@@ -1550,9 +1554,16 @@ class PaymentEntry(AccountsController):
 			frappe.db.set_value("Payment Entry Reference", invoice.name, "reconcile_effect_on", posting_date)
 
 		dr_or_cr, account = self.get_dr_and_account_for_advances(invoice)
+		base_allocated_amount = self.calculate_base_allocated_amount_for_reference(invoice)
 		args_dict["account"] = account
-		args_dict[dr_or_cr] = self.calculate_base_allocated_amount_for_reference(invoice)
+		args_dict[dr_or_cr] = base_allocated_amount
 		args_dict[dr_or_cr + "_in_account_currency"] = invoice.allocated_amount
+		args_dict[dr_or_cr + "_in_transaction_currency"] = (
+			invoice.allocated_amount
+			if self.party_account_currency == self.transaction_currency
+			else base_allocated_amount / self.transaction_exchange_rate
+		)
+
 		args_dict.update(
 			{
 				"against_voucher_type": invoice.reference_doctype,
@@ -1570,8 +1581,13 @@ class PaymentEntry(AccountsController):
 		args_dict[dr_or_cr + "_in_account_currency"] = 0
 		dr_or_cr = "debit" if dr_or_cr == "credit" else "credit"
 		args_dict["account"] = self.party_account
-		args_dict[dr_or_cr] = self.calculate_base_allocated_amount_for_reference(invoice)
+		args_dict[dr_or_cr] = base_allocated_amount
 		args_dict[dr_or_cr + "_in_account_currency"] = invoice.allocated_amount
+		args_dict[dr_or_cr + "_in_transaction_currency"] = (
+			invoice.allocated_amount
+			if self.party_account_currency == self.transaction_currency
+			else base_allocated_amount / self.transaction_exchange_rate
+		)
 		args_dict.update(
 			{
 				"against_voucher_type": "Payment Entry",
@@ -1593,6 +1609,9 @@ class PaymentEntry(AccountsController):
 						"account_currency": self.paid_from_account_currency,
 						"against": self.party if self.payment_type == "Pay" else self.paid_to,
 						"credit_in_account_currency": self.paid_amount,
+						"credit_in_transaction_currency": self.paid_amount
+						if self.paid_from_account_currency == self.transaction_currency
+						else self.base_paid_amount / self.transaction_exchange_rate,
 						"credit": self.base_paid_amount,
 						"cost_center": self.cost_center,
 						"post_net_value": True,
@@ -1608,6 +1627,9 @@ class PaymentEntry(AccountsController):
 						"account_currency": self.paid_to_account_currency,
 						"against": self.party if self.payment_type == "Receive" else self.paid_from,
 						"debit_in_account_currency": self.received_amount,
+						"debit_in_transaction_currency": self.received_amount
+						if self.paid_to_account_currency == self.transaction_currency
+						else self.base_received_amount / self.transaction_exchange_rate,
 						"debit": self.base_received_amount,
 						"cost_center": self.cost_center,
 					},
@@ -1643,6 +1665,8 @@ class PaymentEntry(AccountsController):
 						dr_or_cr + "_in_account_currency": base_tax_amount
 						if account_currency == self.company_currency
 						else d.tax_amount,
+						dr_or_cr + "_in_transaction_currency": base_tax_amount
+						/ self.transaction_exchange_rate,
 						"cost_center": d.cost_center,
 						"post_net_value": True,
 					},
@@ -1668,6 +1692,8 @@ class PaymentEntry(AccountsController):
 							rev_dr_or_cr + "_in_account_currency": base_tax_amount
 							if account_currency == self.company_currency
 							else d.tax_amount,
+							rev_dr_or_cr + "_in_transaction_currency": base_tax_amount
+							/ self.transaction_exchange_rate,
 							"cost_center": self.cost_center,
 							"post_net_value": True,
 						},
@@ -1690,6 +1716,7 @@ class PaymentEntry(AccountsController):
 							"account_currency": account_currency,
 							"against": self.party or self.paid_from,
 							"debit_in_account_currency": d.amount,
+							"debit_in_transaction_currency": d.amount / self.transaction_exchange_rate,
 							"debit": d.amount,
 							"cost_center": d.cost_center,
 						},
@@ -1952,7 +1979,7 @@ class PaymentEntry(AccountsController):
 
 			allocated_positive_outstanding = paid_amount + allocated_negative_outstanding
 
-		elif self.party_type in ("Supplier", "Employee"):
+		elif self.party_type in ("Supplier", "Customer"):
 			if paid_amount > total_negative_outstanding:
 				if total_negative_outstanding == 0:
 					frappe.msgprint(
@@ -2721,9 +2748,6 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 	account_balance = get_balance_on(party_account, date, cost_center=cost_center)
 	_party_name = "title" if party_type == "Shareholder" else party_type.lower() + "_name"
 	party_name = frappe.db.get_value(party_type, party, _party_name)
-	party_balance = get_balance_on(
-		party_type=party_type, party=party, company=company, cost_center=cost_center
-	)
 	if party_type in ["Customer", "Supplier"]:
 		party_bank_account = get_party_bank_account(party_type, party)
 		bank_account = get_default_company_bank_account(company, party_type, party)
@@ -2732,7 +2756,6 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 		"party_account": party_account,
 		"party_name": party_name,
 		"party_account_currency": account_currency,
-		"party_balance": party_balance,
 		"account_balance": account_balance,
 		"party_bank_account": party_bank_account,
 		"bank_account": bank_account,
@@ -3450,13 +3473,14 @@ def add_income_discount_loss(pe, doc, total_discount_percent) -> float:
 	"""Add loss on income discount in base currency."""
 	precision = doc.precision("total")
 	base_loss_on_income = doc.get("base_total") * (total_discount_percent / 100)
+	positive_negative = -1 if pe.payment_type == "Pay" else 1
 
 	pe.append(
 		"deductions",
 		{
 			"account": frappe.get_cached_value("Company", pe.company, "default_discount_account"),
 			"cost_center": pe.cost_center or frappe.get_cached_value("Company", pe.company, "cost_center"),
-			"amount": flt(base_loss_on_income, precision),
+			"amount": flt(base_loss_on_income, precision) * positive_negative,
 		},
 	)
 
@@ -3468,6 +3492,7 @@ def add_tax_discount_loss(pe, doc, total_discount_percentage) -> float:
 	tax_discount_loss = {}
 	base_total_tax_loss = 0
 	precision = doc.precision("tax_amount_after_discount_amount", "taxes")
+	positive_negative = -1 if pe.payment_type == "Pay" else 1
 
 	# The same account head could be used more than once
 	for tax in doc.get("taxes", []):
@@ -3490,7 +3515,7 @@ def add_tax_discount_loss(pe, doc, total_discount_percentage) -> float:
 				"account": account,
 				"cost_center": pe.cost_center
 				or frappe.get_cached_value("Company", pe.company, "cost_center"),
-				"amount": flt(loss, precision),
+				"amount": flt(loss, precision) * positive_negative,
 			},
 		)
 
@@ -3556,19 +3581,6 @@ def get_paid_amount(dt, dn, party_type, party, account, due_date):
 	)
 
 	return paid_amount[0][0] if paid_amount else 0
-
-
-@frappe.whitelist()
-def get_party_and_account_balance(
-	company, date, paid_from=None, paid_to=None, ptype=None, pty=None, cost_center=None
-):
-	return frappe._dict(
-		{
-			"party_balance": get_balance_on(party_type=ptype, party=pty, cost_center=cost_center),
-			"paid_from_account_balance": get_balance_on(paid_from, date, cost_center=cost_center),
-			"paid_to_account_balance": get_balance_on(paid_to, date=date, cost_center=cost_center),
-		}
-	)
 
 
 @frappe.whitelist()

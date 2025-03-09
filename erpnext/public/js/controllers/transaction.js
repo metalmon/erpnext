@@ -765,27 +765,6 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		});
 	}
 
-	add_taxes_from_item_tax_template(item_tax_map) {
-		let me = this;
-
-		if(item_tax_map && cint(frappe.defaults.get_default("add_taxes_from_item_tax_template"))) {
-			if(typeof (item_tax_map) == "string") {
-				item_tax_map = JSON.parse(item_tax_map);
-			}
-
-			$.each(item_tax_map, function(tax, rate) {
-				let found = (me.frm.doc.taxes || []).find(d => d.account_head === tax);
-				if(!found) {
-					let child = frappe.model.add_child(me.frm.doc, "taxes");
-					child.charge_type = "On Net Total";
-					child.account_head = tax;
-					child.rate = 0;
-					child.set_by_item_tax_template = true;
-				}
-			});
-		}
-	}
-
 	serial_no(doc, cdt, cdn) {
 		var me = this;
 		var item = frappe.get_doc(cdt, cdn);
@@ -1373,6 +1352,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				() => this.calculate_stock_uom_rate(doc, cdt, cdn),
 				() => this.apply_pricing_rule(item, true)
 			]);
+		} else {
+			this.conversion_factor(doc, cdt, cdn, true)
 		}
 	}
 
@@ -1897,7 +1878,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 		const exist_items = items.map(row => { return {item_code: row.item_code, pricing_rules: row.pricing_rules};});
 
-		args.free_item_data.forEach(pr_row => {
+		args.free_item_data.forEach(async pr_row => {
 			let row_to_modify = {};
 
 			// If there are no free items, or if the current free item doesn't exist in the table, add it
@@ -1915,6 +1896,14 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			for (let key in pr_row) {
 				row_to_modify[key] = pr_row[key];
 			}
+
+			if (this.frm.doc.hasOwnProperty("is_pos") && this.frm.doc.is_pos) {
+				let r = await frappe.db.get_value("POS Profile", this.frm.doc.pos_profile, "cost_center");
+				if (r.message.cost_center) {
+					row_to_modify["cost_center"] = r.message.cost_center;
+				}
+			}
+
 			this.frm.script_manager.copy_from_first_row("items", row_to_modify, ["expense_account", "income_account"]);
 		});
 
@@ -2514,6 +2503,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				'item_code': item.item_code,
 				'valid_from': ["<=", doc.transaction_date || doc.bill_date || doc.posting_date],
 				'item_group': item.item_group,
+				"base_net_rate": item.base_net_rate,
 			}
 
 			if (doc.tax_category)
