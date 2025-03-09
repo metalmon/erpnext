@@ -282,17 +282,20 @@ def get_columns(filters):
 
 
 def get_message():
-	return """<span class="indicator">
-		Valid till : &nbsp;&nbsp;
-		</span>
-		<span class="indicator orange">
-		Expires in a week or less
-		</span>
-		&nbsp;&nbsp;
-		<span class="indicator red">
-		Expires today / Already Expired
-		</span>"""
-
+        return """<span class="indicator">
+                {0} : &nbsp;&nbsp;
+                </span>
+                <span class="indicator orange">
+                {1}
+                </span>
+                &nbsp;&nbsp;
+                <span class="indicator red">
+                {2}
+                </span>""".format(
+                        _("Valid till"),
+                        _("Expires in a week or less"),
+                        _("Expires today / Already Expired")
+                )
 
 @frappe.whitelist()
 def set_default_supplier(item_code, supplier, company):
