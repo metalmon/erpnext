@@ -78,26 +78,28 @@ class Employee(NestedSet):
 
 	def on_update(self):
 		self.update_nsm_model()
+		frappe.clear_cache()
 		if self.user_id:
 			self.update_user()
 			self.update_user_permissions()
 		self.reset_employee_emails_cache()
 
 	def update_user_permissions(self):
-		if not self.create_user_permission:
-			return
-		if not has_permission("User Permission", ptype="write", print_logs=False):
+		if not has_permission("User Permission", ptype="write", print_logs=False) or (
+			not self.has_value_changed("user_id") and not self.has_value_changed("create_user_permission")
+		):
 			return
 
 		employee_user_permission_exists = frappe.db.exists(
 			"User Permission", {"allow": "Employee", "for_value": self.name, "user": self.user_id}
 		)
 
-		if employee_user_permission_exists:
-			return
-
-		add_user_permission("Employee", self.name, self.user_id)
-		add_user_permission("Company", self.company, self.user_id)
+		if employee_user_permission_exists and not self.create_user_permission:
+			remove_user_permission("Employee", self.name, self.user_id)
+			remove_user_permission("Company", self.company, self.user_id)
+		elif not employee_user_permission_exists and self.create_user_permission:
+			add_user_permission("Employee", self.name, self.user_id)
+			add_user_permission("Company", self.company, self.user_id)
 
 	def update_user(self):
 		# add employee role if missing

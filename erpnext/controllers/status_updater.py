@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import comma_or, flt, get_link_to_form, getdate, now, nowdate
+from frappe.utils import comma_or, flt, get_link_to_form, getdate, now, nowdate, safe_div
 
 
 class OverAllowanceError(frappe.ValidationError):
@@ -220,7 +220,9 @@ class StatusUpdater(Document):
 		}
 		"""
 		if self.doctype not in status_map:
-			return {"status": self.status}
+			return {
+				"status": self.get("status")
+			}  # sometimes status field is not present on certain DocTypes such as Stock Entry
 
 		sl = status_map[self.doctype][:]
 		sl.reverse()
@@ -562,7 +564,8 @@ class StatusUpdater(Document):
 			target = frappe.get_doc(args["target_parent_dt"], args["name"])
 			target.update(update_data)  # status calculus might depend on it
 			status = target.get_status()
-			update_data.update(status)
+			if status.get("status"):
+				update_data.update(status)
 			target.db_set(update_data, update_modified=update_modified, notify=True)
 
 	def _update_modified(self, args, update_modified):
@@ -616,7 +619,7 @@ class StatusUpdater(Document):
 				)[0][0]
 			)
 
-			per_billed = (min(ref_doc_qty, billed_qty) / ref_doc_qty) * 100
+			per_billed = safe_div(min(ref_doc_qty, billed_qty), ref_doc_qty) * 100
 
 			ref_doc = frappe.get_doc(ref_dt, ref_dn)
 

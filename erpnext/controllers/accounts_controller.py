@@ -95,9 +95,6 @@ force_item_fields = (
 
 
 class AccountsController(TransactionBase):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-
 	def get_print_settings(self):
 		print_setting_fields = []
 		items_field = self.meta.get_field("items")
@@ -173,7 +170,7 @@ class AccountsController(TransactionBase):
 			self.validate_qty_is_not_zero()
 
 		if (
-			self.doctype in ["Sales Invoice", "Purchase Invoice"]
+			self.doctype in ["Sales Invoice", "Purchase Invoice", "POS Invoice"]
 			and self.get("is_return")
 			and self.get("update_stock")
 		):
@@ -197,6 +194,14 @@ class AccountsController(TransactionBase):
 		self.set_incoming_rate()
 		self.init_internal_values()
 
+		# Need to set taxes based on taxes_and_charges template
+		# before calculating taxes and totals
+		if self.meta.get_field("taxes_and_charges"):
+			self.validate_enabled_taxes_and_charges()
+			self.validate_tax_account_company()
+
+		self.set_taxes_and_charges()
+
 		if self.meta.get_field("currency"):
 			self.calculate_taxes_and_totals()
 
@@ -206,10 +211,6 @@ class AccountsController(TransactionBase):
 			validate_return(self)
 
 		self.validate_all_documents_schedule()
-
-		if self.meta.get_field("taxes_and_charges"):
-			self.validate_enabled_taxes_and_charges()
-			self.validate_tax_account_company()
 
 		self.validate_party()
 		self.validate_currency()
@@ -255,8 +256,6 @@ class AccountsController(TransactionBase):
 			self.validate_deferred_income_expense_account()
 			self.set_inter_company_account()
 
-		self.set_taxes_and_charges()
-
 		if self.doctype == "Purchase Invoice":
 			self.calculate_paid_amount()
 			# apply tax withholding only if checked and applicable
@@ -272,6 +271,7 @@ class AccountsController(TransactionBase):
 		self.set_total_in_words()
 		self.set_default_letter_head()
 		self.validate_company_in_accounting_dimension()
+		self.validate_party_address_and_contact()
 
 	def set_default_letter_head(self):
 		if hasattr(self, "letter_head") and not self.letter_head:
@@ -421,7 +421,7 @@ class AccountsController(TransactionBase):
 			.where(doc_field.fieldname == "company")
 		).run(as_list=True)
 
-		dimension_list = sum(dimension_list, ["Project"])
+		dimension_list = sum(dimension_list, ["Project", "Cost Center"])
 		self.validate_company(dimension_list)
 
 		for child in self.get_all_children() or []:
@@ -442,6 +442,45 @@ class AccountsController(TransactionBase):
 							dimension, frappe.bold(dimension_value), self.company
 						)
 					)
+
+	def validate_party_address_and_contact(self):
+		party, party_type = None, None
+		if self.get("customer"):
+			party, party_type = self.customer, "Customer"
+			billing_address, shipping_address = (
+				self.get("customer_address"),
+				self.get("shipping_address_name"),
+			)
+			self.validate_party_address(party, party_type, billing_address, shipping_address)
+		elif self.get("supplier"):
+			party, party_type = self.supplier, "Supplier"
+			billing_address = self.get("supplier_address")
+			self.validate_party_address(party, party_type, billing_address)
+
+		if party and party_type:
+			self.validate_party_contact(party, party_type)
+
+	def validate_party_address(self, party, party_type, billing_address, shipping_address=None):
+		if billing_address or shipping_address:
+			party_address = frappe.get_all(
+				"Dynamic Link",
+				{"link_doctype": party_type, "link_name": party, "parenttype": "Address"},
+				pluck="parent",
+			)
+			if billing_address and billing_address not in party_address:
+				frappe.throw(_("Billing Address does not belong to the {0}").format(party))
+			elif shipping_address and shipping_address not in party_address:
+				frappe.throw(_("Shipping Address does not belong to the {0}").format(party))
+
+	def validate_party_contact(self, party, party_type):
+		if self.get("contact_person"):
+			contact = frappe.get_all(
+				"Dynamic Link",
+				{"link_doctype": party_type, "link_name": party, "parenttype": "Contact"},
+				pluck="parent",
+			)
+			if self.contact_person and self.contact_person not in contact:
+				frappe.throw(_("Contact Person does not belong to the {0}").format(party))
 
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
@@ -823,10 +862,14 @@ class AccountsController(TransactionBase):
 									and item.get("use_serial_batch_fields")
 								)
 							):
-								if fieldname == "batch_no" and not item.batch_no:
-									item.set("rate", ret.get("rate"))
-									item.set("price_list_rate", ret.get("price_list_rate"))
 								item.set(fieldname, value)
+
+								if fieldname == "batch_no" and item.batch_no and not item.is_free_item:
+									if ret.get("rate"):
+										item.set("rate", ret.get("rate"))
+
+									if not item.get("price_list_rate") and ret.get("price_list_rate"):
+										item.set("price_list_rate", ret.get("price_list_rate"))
 
 							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(
 								fieldname
@@ -1119,20 +1162,19 @@ class AccountsController(TransactionBase):
 			)
 
 		# Update details in transaction currency
-		gl_dict.update(
-			{
-				"transaction_currency": self.get("currency") or self.company_currency,
-				"transaction_exchange_rate": item.get("exchange_rate", 1)
-				if self.doctype == "Journal Entry" and item
-				else self.get("conversion_rate", 1),
-				"debit_in_transaction_currency": self.get_value_in_transaction_currency(
-					account_currency, gl_dict, "debit"
-				),
-				"credit_in_transaction_currency": self.get_value_in_transaction_currency(
-					account_currency, gl_dict, "credit"
-				),
-			}
-		)
+		if self.doctype not in ["Purchase Invoice", "Sales Invoice", "Journal Entry", "Payment Entry"]:
+			gl_dict.update(
+				{
+					"transaction_currency": self.get("currency") or self.company_currency,
+					"transaction_exchange_rate": self.get("conversion_rate", 1),
+					"debit_in_transaction_currency": self.get_value_in_transaction_currency(
+						account_currency, gl_dict, "debit"
+					),
+					"credit_in_transaction_currency": self.get_value_in_transaction_currency(
+						account_currency, gl_dict, "credit"
+					),
+				}
+			)
 
 		if not args.get("against_voucher_type") and self.get("against_voucher_type"):
 			gl_dict.update({"against_voucher_type": self.get("against_voucher_type")})
@@ -1892,22 +1934,22 @@ class AccountsController(TransactionBase):
 				continue
 
 			ref_amt = flt(reference_details.get(item.get(item_ref_dn)), self.precision(based_on, item))
+			based_on_amt = flt(item.get(based_on))
 
 			if not ref_amt:
-				frappe.msgprint(
-					_("System will not check over billing since amount for Item {0} in {1} is zero").format(
-						item.item_code, ref_dt
-					),
-					title=_("Warning"),
-					indicator="orange",
-				)
+				if based_on_amt:  # Skip warning for free items
+					frappe.msgprint(
+						_(
+							"System will not check over billing since amount for Item {0} in {1} is zero"
+						).format(item.item_code, ref_dt),
+						title=_("Warning"),
+						indicator="orange",
+					)
 				continue
 
 			already_billed = self.get_billed_amount_for_item(item, item_ref_dn, based_on)
 
-			total_billed_amt = flt(
-				flt(already_billed) + flt(item.get(based_on)), self.precision(based_on, item)
-			)
+			total_billed_amt = flt(flt(already_billed) + based_on_amt, self.precision(based_on, item))
 
 			allowance, item_allowance, global_qty_allowance, global_amount_allowance = get_allowance_for(
 				item.item_code, item_allowance, global_qty_allowance, global_amount_allowance, "amount"
@@ -2776,6 +2818,11 @@ class AccountsController(TransactionBase):
 			elif self.doctype == "Payment Entry":
 				self.make_advance_payment_ledger_for_payment()
 
+	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries):
+		for x in gl_entries:
+			x["transaction_currency"] = self.currency
+			x["transaction_exchange_rate"] = self.get("conversion_rate") or 1
+
 
 @frappe.whitelist()
 def get_tax_rate(account_head):
@@ -3306,6 +3353,7 @@ def set_child_tax_template_and_map(item, child_item, parent_doc):
 			"posting_date": parent_doc.transaction_date,
 			"tax_category": parent_doc.get("tax_category"),
 			"company": parent_doc.get("company"),
+			"base_net_rate": item.get("base_net_rate"),
 		}
 	)
 
