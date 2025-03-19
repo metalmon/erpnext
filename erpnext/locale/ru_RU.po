@@ -6018,6 +6018,10 @@ msgstr "Основное средство {0} должно быть провед
 msgid "Asset {assets_link} created for {item_code}"
 msgstr "Актив {assets_link} создан для {item_code}"
 
+#: erpnext/controllers/buying_controller.py:816
+msgid "Asset {assets_link} created for {item_code}"
+msgstr ""
+
 #: erpnext/assets/doctype/asset_shift_allocation/asset_shift_allocation.py:256
 msgid "Asset's depreciation schedule updated after Asset Shift Allocation {0}"
 msgstr "График амортизации актива обновлен после перераспределения актива {0}"
@@ -6395,6 +6399,10 @@ msgstr "Триггер задания автоматической выверк�
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:391
 msgid "Auto Reconciliation has started in the background"
 msgstr "Автоматическая сверка началась в фоновом режиме"
+
+#: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:391
+msgid "Auto Reconciliation has started in the background"
+msgstr ""
 
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py:147
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py:195
@@ -8028,6 +8036,10 @@ msgstr "Название адреса выставления счета"
 #: erpnext/controllers/accounts_controller.py:471
 msgid "Billing Address does not belong to the {0}"
 msgstr "Адрес для выставления счетов не принадлежит {0}"
+
+#: erpnext/controllers/accounts_controller.py:471
+msgid "Billing Address does not belong to the {0}"
+msgstr ""
 
 #. Label of the billing_amount (Currency) field in DocType 'Sales Invoice
 #. Timesheet'
@@ -11192,6 +11204,10 @@ msgstr "Компания, которую представляет внутрен
 msgid "Company {0} added multiple times"
 msgstr "Компания {0} добавлена несколько раз"
 
+#: erpnext/accounts/doctype/tax_withholding_category/tax_withholding_category.py:62
+msgid "Company {0} added multiple times"
+msgstr ""
+
 #: erpnext/accounts/doctype/account/account.py:472
 msgid "Company {0} does not exist"
 msgstr "Организация {0} не существует"
@@ -11945,6 +11961,10 @@ msgstr "Контактное лицо"
 msgid "Contact Person does not belong to the {0}"
 msgstr "Контактное лицо не принадлежит к {0}"
 
+#: erpnext/controllers/accounts_controller.py:483
+msgid "Contact Person does not belong to the {0}"
+msgstr ""
+
 #. Label of a Link in the Settings Workspace
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Contact Us Settings"
@@ -11953,6 +11973,10 @@ msgstr "Настройки раздела «Контакты»"
 #: erpnext/accounts/print_format/sales_invoice_print/sales_invoice_print.html:55
 msgid "Contact: "
 msgstr "Контакт:"
+
+#: erpnext/accounts/print_format/sales_invoice_print/sales_invoice_print.html:55
+msgid "Contact: "
+msgstr "Контакт: "
 
 #. Label of the contact_info (Tab Break) field in DocType 'Opportunity'
 #: erpnext/crm/doctype/opportunity/opportunity.json
@@ -36475,6 +36499,10 @@ msgstr "Пожалуйста, сначала введите номер теле�
 msgid "Please enter the {schedule_date}."
 msgstr "Пожалуйста, введите {schedule_date}."
 
+#: erpnext/controllers/buying_controller.py:972
+msgid "Please enter the {schedule_date}."
+msgstr ""
+
 #: erpnext/public/js/setup_wizard.js:86
 msgid "Please enter valid Financial Year Start and End Dates"
 msgstr "Пожалуйста, введите корректные начальную и конечную даты финансового года"
@@ -43166,6 +43194,10 @@ msgstr "Зарезервированный запас для партии"
 msgid "Reserved Warehouse is mandatory for the Item {item_code} in Raw Materials supplied."
 msgstr "Зарезервированный склад является обязательным для позиции {item_code} в поставляемых сырьевых материалах."
 
+#: erpnext/controllers/buying_controller.py:452
+msgid "Reserved Warehouse is mandatory for the Item {item_code} in Raw Materials supplied."
+msgstr ""
+
 #: erpnext/stock/report/stock_projected_qty/stock_projected_qty.py:192
 msgid "Reserved for POS Transactions"
 msgstr "Зарезервировано для POS-транзакций"
@@ -44446,6 +44478,42 @@ msgstr "Строка #{idx}: {from_warehouse_field} и {to_warehouse_field} не
 #: erpnext/controllers/buying_controller.py:964
 msgid "Row #{idx}: {schedule_date} cannot be before {transaction_date}."
 msgstr "Строка #{idx}: {schedule_date} не может быть раньше {transaction_date}."
+
+#: erpnext/controllers/buying_controller.py:236
+msgid "Row #{idx}: Cannot select Supplier Warehouse while suppling raw materials to subcontractor."
+msgstr "Строка #{idx}: невозможно выбрать склад поставщика при подаче сырья субподрядчику."
+
+#: erpnext/controllers/buying_controller.py:382
+msgid "Row #{idx}: Item rate has been updated as per valuation rate since its an internal stock transfer."
+msgstr "Строка #{idx}: Стоимость товара была обновлена в соответствии с оценочной ставкой, поскольку это внутреннее перемещение запасов."
+
+#: erpnext/controllers/buying_controller.py:846
+msgid "Row #{idx}: Please enter a location for the asset item {item_code}."
+msgstr ""
+
+#: erpnext/controllers/buying_controller.py:513
+msgid "Row #{idx}: Received Qty must be equal to Accepted + Rejected Qty for Item {item_code}."
+msgstr "Строка #{idx}: Полученное количество должно быть равно принятому + отклоненному количеству для товара {item_code}."
+
+#: erpnext/controllers/buying_controller.py:526
+msgid "Row #{idx}: {field_label} can not be negative for item {item_code}."
+msgstr "Строка #{idx}: {field_label} не может быть отрицательным для {item_code}."
+
+#: erpnext/controllers/buying_controller.py:472
+msgid "Row #{idx}: {field_label} is mandatory."
+msgstr ""
+
+#: erpnext/controllers/buying_controller.py:494
+msgid "Row #{idx}: {field_label} is not allowed in Purchase Return."
+msgstr ""
+
+#: erpnext/controllers/buying_controller.py:227
+msgid "Row #{idx}: {from_warehouse_field} and {to_warehouse_field} cannot be same."
+msgstr ""
+
+#: erpnext/controllers/buying_controller.py:964
+msgid "Row #{idx}: {schedule_date} cannot be before {transaction_date}."
+msgstr ""
 
 #: erpnext/assets/doctype/asset_category/asset_category.py:67
 msgid "Row #{}: Currency of {} - {} doesn't matches company currency."
@@ -48078,6 +48146,10 @@ msgstr "Шаблон адреса доставки"
 #: erpnext/controllers/accounts_controller.py:473
 msgid "Shipping Address does not belong to the {0}"
 msgstr "Адрес доставки не принадлежит {0}"
+
+#: erpnext/controllers/accounts_controller.py:473
+msgid "Shipping Address does not belong to the {0}"
+msgstr ""
 
 #: erpnext/accounts/doctype/shipping_rule/shipping_rule.py:129
 msgid "Shipping Address does not have country, which is required for this Shipping Rule"
@@ -52914,6 +52986,10 @@ msgstr "Праздничный день {0} не попадает в перио�
 msgid "The item {item} is not marked as {type_of} item. You can enable it as {type_of} item from its Item master."
 msgstr "Элемент {item} не отмечен как элемент {type_of}. Вы можете включить его как {type_of} элемент в мастере элементов."
 
+#: erpnext/controllers/buying_controller.py:1031
+msgid "The item {item} is not marked as {type_of} item. You can enable it as {type_of} item from its Item master."
+msgstr ""
+
 #: erpnext/stock/doctype/item/item.py:612
 msgid "The items {0} and {1} are present in the following {2} :"
 msgstr "Товары {0} и {1} присутствуют в следующих {2}:"
@@ -52921,6 +52997,10 @@ msgstr "Товары {0} и {1} присутствуют в следующих {
 #: erpnext/controllers/buying_controller.py:1024
 msgid "The items {items} are not marked as {type_of} item. You can enable them as {type_of} item from their Item masters."
 msgstr "Предметы {items} не отмечены как предметы {type_of}. Вы можете включить их как {type_of} в мастере предметов."
+
+#: erpnext/controllers/buying_controller.py:1024
+msgid "The items {items} are not marked as {type_of} item. You can enable them as {type_of} item from their Item masters."
+msgstr ""
 
 #: erpnext/manufacturing/doctype/workstation/workstation.py:531
 msgid "The job card {0} is in {1} state and you cannot complete."
@@ -60048,6 +60128,18 @@ msgstr "{doctype} {name} отменен или закрыт."
 msgid "{field_label} is mandatory for sub-contracted {doctype}."
 msgstr "{field_label} является обязательным для субподряда {doctype}."
 
+#: erpnext/controllers/buying_controller.py:805
+msgid "{count} Assets created for {item_code}"
+msgstr ""
+
+#: erpnext/controllers/buying_controller.py:709
+msgid "{doctype} {name} is cancelled or closed."
+msgstr "{doctype} {name} отменено или закрыто."
+
+#: erpnext/controllers/buying_controller.py:435
+msgid "{field_label} is mandatory for sub-contracted {doctype}."
+msgstr ""
+
 #: erpnext/controllers/stock_controller.py:1601
 msgid "{item_name}'s Sample Size ({sample_size}) cannot be greater than the Accepted Quantity ({accepted_quantity})"
 msgstr "Размер выборки для {item_name} ({sample_size}) не может быть больше принятого количества ({accepted_quantity})"
@@ -60055,6 +60147,10 @@ msgstr "Размер выборки для {item_name} ({sample_size}) не мо
 #: erpnext/controllers/buying_controller.py:539
 msgid "{ref_doctype} {ref_name} is {status}."
 msgstr "{ref_doctype} {ref_name} - {status}."
+
+#: erpnext/controllers/buying_controller.py:539
+msgid "{ref_doctype} {ref_name} is {status}."
+msgstr ""
 
 #: erpnext/assets/report/fixed_asset_register/fixed_asset_register.py:366
 msgid "{}"
