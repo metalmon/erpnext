@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERPNext VERSION\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
-"POT-Creation-Date: 2025-03-29 21:41+0000\n"
-"PO-Revision-Date: 2025-03-29 21:41+0000\n"
+"POT-Creation-Date: 2025-03-29 21:54+0000\n"
+"PO-Revision-Date: 2025-03-29 21:54+0000\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: hello@frappe.io\n"
 "MIME-Version: 1.0\n"
@@ -1984,6 +1984,11 @@ msgstr ""
 msgid "Accounts Missing Error"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:465 erpnext/public/js/help_links.js:484
+#: erpnext/public/js/help_links.js:524 erpnext/public/js/help_links.js:543
+msgid "Accounts Opening Balance"
+msgstr ""
+
 #. Option for the 'Write Off Based On' (Select) field in DocType 'Journal
 #. Entry'
 #. Name of a report
@@ -3120,6 +3125,7 @@ msgstr ""
 #: erpnext/crm/report/lead_details/lead_details.py:58
 #: erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.json
 #: erpnext/maintenance/doctype/maintenance_visit/maintenance_visit.json
+#: erpnext/public/js/help_links.js:815
 #: erpnext/selling/doctype/installation_note/installation_note.json
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
@@ -3238,6 +3244,10 @@ msgstr ""
 msgid "Address Name"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:113
+msgid "Address Template"
+msgstr ""
+
 #. Label of the address_and_contact (Section Break) field in DocType 'Bank'
 #. Label of the address_and_contact (Section Break) field in DocType 'Bank
 #. Account'
@@ -3352,6 +3362,10 @@ msgstr ""
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 #: erpnext/setup/doctype/company/company.json
 msgid "Advance Payment Date"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:539
+msgid "Advance Payment Entry"
 msgstr ""
 
 #. Name of a DocType
@@ -5302,6 +5316,15 @@ msgstr ""
 msgid "Apply to Document"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:223 erpnext/public/js/help_links.js:276
+#: erpnext/public/js/help_links.js:291
+msgid "Applying Discount"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:231 erpnext/public/js/help_links.js:307
+msgid "Applying Margin"
+msgstr ""
+
 #. Name of a DocType
 #. Label of a Link in the CRM Workspace
 #: erpnext/crm/doctype/appointment/appointment.json
@@ -5579,7 +5602,7 @@ msgstr ""
 #: erpnext/assets/report/fixed_asset_register/fixed_asset_register.js:23
 #: erpnext/assets/report/fixed_asset_register/fixed_asset_register.py:419
 #: erpnext/assets/workspace/assets/assets.json
-#: erpnext/stock/doctype/item/item.json
+#: erpnext/public/js/help_links.js:571 erpnext/stock/doctype/item/item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Asset Category"
 msgstr ""
@@ -6237,6 +6260,7 @@ msgid "Authorization Control"
 msgstr ""
 
 #. Name of a DocType
+#: erpnext/public/js/help_links.js:407
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
 msgid "Authorization Rule"
 msgstr ""
@@ -6299,6 +6323,10 @@ msgstr ""
 #. Label of a Link in the Settings Workspace
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Auto Email Report"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:162
+msgid "Auto Email Reports"
 msgstr ""
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:368
@@ -6454,6 +6482,10 @@ msgstr ""
 #. Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Auto write off precision loss while consolidation"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:702 erpnext/public/js/help_links.js:713
+msgid "Auto-creation of Material Request"
 msgstr ""
 
 #. Label of the auto_add_item_to_cart (Check) field in DocType 'POS Profile'
@@ -6935,6 +6967,7 @@ msgstr ""
 #. Label of a Link in the Manufacturing Workspace
 #: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
+#: erpnext/public/js/help_links.js:879
 msgid "BOM Update Tool"
 msgstr ""
 
@@ -7452,6 +7485,9 @@ msgstr ""
 #: erpnext/accounts/doctype/pos_invoice_item/pos_invoice_item.json
 #: erpnext/accounts/doctype/sales_invoice_item/sales_invoice_item.json
 #: erpnext/manufacturing/doctype/job_card/job_card.json
+#: erpnext/public/js/help_links.js:589 erpnext/public/js/help_links.js:621
+#: erpnext/public/js/help_links.js:652 erpnext/public/js/help_links.js:663
+#: erpnext/public/js/help_links.js:682
 #: erpnext/public/js/utils/barcode_scanner.js:282
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/item_barcode/item_barcode.json
@@ -7651,6 +7687,7 @@ msgstr ""
 
 #. Name of a DocType
 #. Label of a Link in the Stock Workspace
+#: erpnext/public/js/help_links.js:754 erpnext/public/js/help_links.js:756
 #: erpnext/stock/doctype/batch/batch.json
 #: erpnext/stock/report/batch_item_expiry_status/batch_item_expiry_status.py:34
 #: erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.py:75
@@ -7900,6 +7937,10 @@ msgstr ""
 #. DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Bill for Rejected Quantity in Purchase Invoice"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:847
+msgid "Bill of Material"
 msgstr ""
 
 #. Label of a Card Break in the Manufacturing Workspace
@@ -8584,6 +8625,10 @@ msgstr ""
 msgid "Budget cannot be assigned against {0}, as it's not an Income or Expense account"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:577 erpnext/public/js/help_links.js:694
+msgid "Budgeting"
+msgstr ""
+
 #: erpnext/accounts/doctype/fiscal_year/fiscal_year_dashboard.py:8
 msgid "Budgets"
 msgstr ""
@@ -8603,6 +8648,10 @@ msgstr ""
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:31
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts_with_account_number.py:44
 msgid "Buildings"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:7
+msgid "Bulk Rename"
 msgstr ""
 
 #. Name of a DocType
@@ -8710,6 +8759,7 @@ msgstr ""
 #. Label of a shortcut in the Settings Workspace
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 #: erpnext/buying/workspace/buying/buying.json
+#: erpnext/public/js/help_links.js:352
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Buying Settings"
 msgstr ""
@@ -9000,7 +9050,7 @@ msgstr ""
 #: erpnext/crm/doctype/email_campaign/email_campaign.json
 #: erpnext/crm/doctype/lead/lead.json
 #: erpnext/crm/doctype/opportunity/opportunity.json
-#: erpnext/crm/workspace/crm/crm.json
+#: erpnext/crm/workspace/crm/crm.json erpnext/public/js/help_links.js:823
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/selling/workspace/selling/selling.json
@@ -9894,7 +9944,7 @@ msgstr ""
 #: erpnext/accounts/doctype/account/account_tree.js:5
 #: erpnext/accounts/doctype/cost_center/cost_center_tree.js:52
 #: erpnext/accounts/workspace/accounting/accounting.json
-#: erpnext/public/js/setup_wizard.js:36
+#: erpnext/public/js/help_links.js:450 erpnext/public/js/setup_wizard.js:36
 #: erpnext/setup/doctype/company/company.js:104
 #: erpnext/setup/doctype/company/company.json
 #: erpnext/setup/workspace/home/home.json
@@ -10006,6 +10056,7 @@ msgstr ""
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/cheque_print_template/cheque_print_template.json
+#: erpnext/public/js/help_links.js:127
 msgid "Cheque Print Template"
 msgstr ""
 
@@ -10232,6 +10283,10 @@ msgstr ""
 #. Settings'
 #: erpnext/crm/doctype/crm_settings/crm_settings.json
 msgid "Close Replied Opportunity After Days"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:303
+msgid "Close Sales Order"
 msgstr ""
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:201
@@ -10868,6 +10923,7 @@ msgstr ""
 #: erpnext/projects/report/project_summary/project_summary.js:8
 #: erpnext/projects/report/project_wise_stock_tracking/project_wise_stock_tracking.py:44
 #: erpnext/public/js/financial_statements.js:146
+#: erpnext/public/js/help_links.js:437
 #: erpnext/public/js/purchase_trends_filters.js:8
 #: erpnext/public/js/sales_trends_filters.js:51
 #: erpnext/regional/doctype/import_supplier_invoice/import_supplier_invoice.json
@@ -11773,6 +11829,7 @@ msgstr ""
 #: erpnext/crm/workspace/crm/crm.json
 #: erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.json
 #: erpnext/maintenance/doctype/maintenance_visit/maintenance_visit.json
+#: erpnext/public/js/help_links.js:817
 #: erpnext/selling/doctype/installation_note/installation_note.json
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
@@ -13289,6 +13346,7 @@ msgstr ""
 #. Label of the section_credit_limit (Section Break) field in DocType 'Supplier
 #. Group'
 #: erpnext/accounts/report/accounts_receivable/accounts_receivable.html:36
+#: erpnext/public/js/help_links.js:239 erpnext/public/js/help_links.js:247
 #: erpnext/selling/doctype/customer/customer.json
 #: erpnext/selling/doctype/customer_credit_limit/customer_credit_limit.json
 #: erpnext/selling/report/customer_credit_balance/customer_credit_balance.py:65
@@ -13846,6 +13904,11 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:888 erpnext/public/js/help_links.js:899
+#: erpnext/public/js/help_links.js:906
+msgid "Custom Field"
+msgstr ""
+
 #. Label of the custom_remarks (Check) field in DocType 'Payment Entry'
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 msgid "Custom Remarks"
@@ -13970,6 +14033,7 @@ msgstr ""
 #: erpnext/projects/doctype/timesheet/timesheet.js:222
 #: erpnext/projects/doctype/timesheet/timesheet.json
 #: erpnext/projects/report/project_wise_stock_tracking/project_wise_stock_tracking.py:45
+#: erpnext/public/js/help_links.js:237 erpnext/public/js/help_links.js:245
 #: erpnext/public/js/sales_trends_filters.js:25
 #: erpnext/public/js/sales_trends_filters.js:39
 #: erpnext/quality_management/doctype/quality_feedback/quality_feedback.json
@@ -14512,6 +14576,10 @@ msgstr ""
 #. Option for the 'Based On' (Select) field in DocType 'Authorization Rule'
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
 msgid "Customerwise Discount"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:892
+msgid "Customize Field"
 msgstr ""
 
 #. Name of a DocType
@@ -15701,6 +15769,10 @@ msgstr ""
 msgid "Delete Accounting and Stock Ledger Entries on deletion of Transaction"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:441
+msgid "Delete All Related Transactions for a Company"
+msgstr ""
+
 #. Label of the delete_bin_data (Check) field in DocType 'Transaction Deletion
 #. Record'
 #: erpnext/setup/doctype/transaction_deletion_record/transaction_deletion_record.json
@@ -15888,6 +15960,7 @@ msgstr ""
 #: erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.py:21
 #: erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py:293
 #: erpnext/accounts/report/sales_register/sales_register.py:245
+#: erpnext/public/js/help_links.js:659 erpnext/public/js/help_links.js:674
 #: erpnext/selling/doctype/sales_order/sales_order.js:659
 #: erpnext/selling/doctype/sales_order/sales_order_list.js:73
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
@@ -17834,6 +17907,14 @@ msgstr ""
 msgid "Drop Ship"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:295
+msgid "Drop Shipping"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:199
+msgid "Dropbox Settings"
+msgstr ""
+
 #. Label of the due_date (Date) field in DocType 'GL Entry'
 #. Label of the due_date (Date) field in DocType 'Journal Entry'
 #. Label of the due_date (Date) field in DocType 'Opening Invoice Creation Tool
@@ -18262,7 +18343,7 @@ msgstr ""
 #. Label of a Link in the Home Workspace
 #. Label of a Link in the Settings Workspace
 #. Label of the email_account (Link) field in DocType 'Issue'
-#: erpnext/setup/workspace/home/home.json
+#: erpnext/public/js/help_links.js:134 erpnext/setup/workspace/home/home.json
 #: erpnext/setup/workspace/settings/settings.json
 #: erpnext/support/doctype/issue/issue.json
 msgid "Email Account"
@@ -18300,6 +18381,7 @@ msgid "Email Details"
 msgstr ""
 
 #. Name of a DocType
+#: erpnext/public/js/help_links.js:155
 #: erpnext/setup/doctype/email_digest/email_digest.json
 msgid "Email Digest"
 msgstr ""
@@ -20824,6 +20906,10 @@ msgstr ""
 msgid "Forum URL"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:795
+msgid "Fractions in UOM"
+msgstr ""
+
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:4
 msgid "Free Alongside Ship"
@@ -21988,6 +22074,10 @@ msgstr ""
 #: erpnext/setup/doctype/global_defaults/global_defaults.json
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Global Defaults"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:85
+msgid "Global Settings"
 msgstr ""
 
 #: erpnext/www/book_appointment/index.html:58
@@ -23685,6 +23775,10 @@ msgstr ""
 msgid "Importing Common Codes"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:57 erpnext/public/js/help_links.js:64
+msgid "Importing and Exporting Data"
+msgstr ""
+
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:45
 msgid "Importing {0} of {1}, {2}"
 msgstr ""
@@ -24458,6 +24552,7 @@ msgstr ""
 #. Label of the installation_note (Section Break) field in DocType
 #. 'Installation Note'
 #. Label of a Link in the Stock Workspace
+#: erpnext/public/js/help_links.js:689
 #: erpnext/selling/doctype/installation_note/installation_note.json
 #: erpnext/stock/doctype/delivery_note/delivery_note.js:208
 #: erpnext/stock/workspace/stock/stock.json
@@ -25863,6 +25958,7 @@ msgstr ""
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:212
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:359
+#: erpnext/public/js/help_links.js:583 erpnext/public/js/help_links.js:615
 #: erpnext/public/js/purchase_trends_filters.js:48
 #: erpnext/public/js/purchase_trends_filters.js:63
 #: erpnext/public/js/sales_trends_filters.js:23
@@ -25955,7 +26051,7 @@ msgstr ""
 #. Name of a DocType
 #. Label of the item_attribute (Link) field in DocType 'Item Variant'
 #. Label of a Link in the Stock Workspace
-#: erpnext/stock/doctype/item/item.json
+#: erpnext/public/js/help_links.js:788 erpnext/stock/doctype/item/item.json
 #: erpnext/stock/doctype/item_attribute/item_attribute.json
 #: erpnext/stock/doctype/item_variant/item_variant.json
 #: erpnext/stock/workspace/stock/stock.json
@@ -26207,6 +26303,10 @@ msgstr ""
 msgid "Item Code: {0} is not available under warehouse {1}."
 msgstr ""
 
+#: erpnext/public/js/help_links.js:601 erpnext/public/js/help_links.js:633
+msgid "Item Codification"
+msgstr ""
+
 #. Name of a DocType
 #: erpnext/stock/doctype/item_customer_detail/item_customer_detail.json
 msgid "Item Customer Detail"
@@ -26323,6 +26423,7 @@ msgstr ""
 #: erpnext/manufacturing/doctype/bom_creator_item/bom_creator_item.json
 #: erpnext/manufacturing/doctype/job_card_item/job_card_item.json
 #: erpnext/manufacturing/doctype/plant_floor/plant_floor.js:128
+#: erpnext/public/js/help_links.js:781
 #: erpnext/public/js/purchase_trends_filters.js:49
 #: erpnext/public/js/sales_trends_filters.js:24
 #: erpnext/selling/doctype/party_specific_item/party_specific_item.json
@@ -26621,6 +26722,7 @@ msgstr ""
 #. Name of a DocType
 #. Label of a Link in the Stock Workspace
 #: erpnext/buying/workspace/buying/buying.json
+#: erpnext/public/js/help_links.js:585 erpnext/public/js/help_links.js:617
 #: erpnext/selling/workspace/selling/selling.json
 #: erpnext/stock/doctype/item_price/item_price.json
 #: erpnext/stock/workspace/stock/stock.json
@@ -26797,6 +26899,14 @@ msgstr ""
 msgid "Item Unavailable"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:374
+msgid "Item UoM"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:609 erpnext/public/js/help_links.js:641
+msgid "Item Valuation"
+msgstr ""
+
 #. Name of a DocType
 #: erpnext/stock/doctype/item_variant/item_variant.json
 msgid "Item Variant"
@@ -26824,6 +26934,10 @@ msgstr ""
 
 #: erpnext/stock/doctype/item/item.js:796
 msgid "Item Variant {0} already exists with same attributes"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:605 erpnext/public/js/help_links.js:637
+msgid "Item Variants"
 msgstr ""
 
 #: erpnext/stock/doctype/item/item.py:779
@@ -26879,6 +26993,10 @@ msgstr ""
 #. and Charges'
 #: erpnext/accounts/doctype/purchase_taxes_and_charges/purchase_taxes_and_charges.json
 msgid "Item Wise Tax Detail "
+msgstr ""
+
+#: erpnext/public/js/help_links.js:593 erpnext/public/js/help_links.js:625
+msgid "Item Wise Taxation"
 msgstr ""
 
 #. Option for the 'Based On' (Select) field in DocType 'Repost Item Valuation'
@@ -27467,6 +27585,7 @@ msgstr ""
 #: erpnext/assets/doctype/asset/asset.json
 #: erpnext/assets/doctype/asset_value_adjustment/asset_value_adjustment.json
 #: erpnext/assets/doctype/depreciation_schedule/depreciation_schedule.json
+#: erpnext/public/js/help_links.js:535
 #: erpnext/templates/form_grid/bank_reconciliation_grid.html:3
 msgid "Journal Entry"
 msgstr ""
@@ -27654,6 +27773,10 @@ msgstr ""
 msgid "Knot"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:206
+msgid "LDAP Settings"
+msgstr ""
+
 #. Option for the 'Valuation Method' (Select) field in DocType 'Item'
 #. Option for the 'Default Valuation Method' (Select) field in DocType 'Stock
 #. Settings'
@@ -27694,6 +27817,7 @@ msgstr ""
 #. Name of a DocType
 #. Label of a Link in the Stock Workspace
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js:674
+#: erpnext/public/js/help_links.js:774
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.js:104
 #: erpnext/stock/workspace/stock/stock.json
@@ -27845,7 +27969,7 @@ msgstr ""
 #: erpnext/crm/report/prospects_engaged_but_not_converted/prospects_engaged_but_not_converted.js:8
 #: erpnext/crm/report/prospects_engaged_but_not_converted/prospects_engaged_but_not_converted.py:28
 #: erpnext/crm/workspace/crm/crm.json erpnext/public/js/communication.js:25
-#: erpnext/setup/workspace/home/home.json
+#: erpnext/public/js/help_links.js:809 erpnext/setup/workspace/home/home.json
 #: erpnext/support/doctype/issue/issue.json
 msgid "Lead"
 msgstr ""
@@ -28138,6 +28262,7 @@ msgstr ""
 #: erpnext/buying/doctype/purchase_order/purchase_order.json
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.json
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation.json
+#: erpnext/public/js/help_links.js:106
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/setup/workspace/home/home.json
@@ -29032,6 +29157,19 @@ msgstr ""
 msgid "Managing Director"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:564 erpnext/public/js/help_links.js:597
+#: erpnext/public/js/help_links.js:629
+msgid "Managing Fixed Assets"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:31
+msgid "Managing Perm Level in Permissions Manager"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:454
+msgid "Managing Tree Mastes"
+msgstr ""
+
 #. Label of the reqd (Check) field in DocType 'POS Field'
 #. Label of the reqd (Check) field in DocType 'Inventory Dimension'
 #: erpnext/accounts/doctype/payment_entry/payment_entry.js:267
@@ -29586,6 +29724,7 @@ msgstr ""
 #: erpnext/manufacturing/doctype/production_plan_material_request/production_plan_material_request.json
 #: erpnext/manufacturing/doctype/production_plan_sub_assembly_item/production_plan_sub_assembly_item.json
 #: erpnext/manufacturing/doctype/work_order/work_order.json
+#: erpnext/public/js/help_links.js:698 erpnext/public/js/help_links.js:709
 #: erpnext/selling/doctype/sales_order/sales_order.js:690
 #: erpnext/selling/doctype/sales_order_item/sales_order_item.json
 #: erpnext/selling/report/pending_so_items_for_purchase_request/pending_so_items_for_purchase_request.py:36
@@ -31036,6 +31175,7 @@ msgstr ""
 #: erpnext/manufacturing/doctype/downtime_entry/downtime_entry.json
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
+#: erpnext/public/js/help_links.js:78
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
 #: erpnext/stock/doctype/stock_closing_entry/stock_closing_entry.json
@@ -31108,6 +31248,10 @@ msgstr ""
 #: erpnext/setup/setup_wizard/data/sales_stage.txt:8
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:420
 msgid "Negotiation/Review"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:851
+msgid "Nested BOM Structure"
 msgstr ""
 
 #. Label of the net_amount (Currency) field in DocType 'Advance Taxes and
@@ -31530,6 +31674,10 @@ msgstr ""
 msgid "New Task"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:16
+msgid "New User"
+msgstr ""
+
 #: erpnext/manufacturing/doctype/bom/bom.js:156
 msgid "New Version"
 msgstr ""
@@ -31571,7 +31719,7 @@ msgstr ""
 
 #. Label of a Link in the CRM Workspace
 #. Label of a Link in the Settings Workspace
-#: erpnext/crm/workspace/crm/crm.json
+#: erpnext/crm/workspace/crm/crm.json erpnext/public/js/help_links.js:820
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Newsletter"
 msgstr ""
@@ -32250,6 +32398,7 @@ msgid "Notice (days)"
 msgstr ""
 
 #. Label of a Link in the Settings Workspace
+#: erpnext/public/js/help_links.js:141 erpnext/public/js/help_links.js:148
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Notification"
 msgstr ""
@@ -32978,9 +33127,14 @@ msgstr ""
 
 #. Label of the opening_stock (Float) field in DocType 'Item'
 #. Option for the 'Purpose' (Select) field in DocType 'Stock Reconciliation'
-#: erpnext/stock/doctype/item/item.json erpnext/stock/doctype/item/item.py:294
+#: erpnext/public/js/help_links.js:729 erpnext/stock/doctype/item/item.json
+#: erpnext/stock/doctype/item/item.py:294
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.json
 msgid "Opening Stock"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:802
+msgid "Opening Stock Entry"
 msgstr ""
 
 #. Label of the opening_time (Time) field in DocType 'Issue'
@@ -33067,6 +33221,7 @@ msgstr ""
 #: erpnext/manufacturing/report/job_card_summary/job_card_summary.py:167
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:328
+#: erpnext/public/js/help_links.js:872
 msgid "Operation"
 msgstr ""
 
@@ -33232,6 +33387,7 @@ msgstr ""
 #: erpnext/crm/report/lead_details/lead_details.js:36
 #: erpnext/crm/report/lost_opportunity/lost_opportunity.py:17
 #: erpnext/crm/workspace/crm/crm.json erpnext/public/js/communication.js:35
+#: erpnext/public/js/help_links.js:812
 #: erpnext/selling/doctype/quotation/quotation.js:127
 #: erpnext/selling/doctype/quotation/quotation.json
 msgid "Opportunity"
@@ -34037,6 +34193,7 @@ msgstr ""
 #: erpnext/accounts/report/pos_register/pos_register.js:32
 #: erpnext/accounts/report/pos_register/pos_register.py:117
 #: erpnext/accounts/report/pos_register/pos_register.py:188
+#: erpnext/public/js/help_links.js:513
 #: erpnext/selling/page/point_of_sale/pos_controller.js:80
 msgid "POS Profile"
 msgstr ""
@@ -34165,6 +34322,7 @@ msgstr ""
 
 #. Name of a DocType
 #. Label of a Link in the Stock Workspace
+#: erpnext/public/js/help_links.js:760
 #: erpnext/stock/doctype/delivery_note/delivery_note.js:244
 #: erpnext/stock/doctype/packing_slip/packing_slip.json
 #: erpnext/stock/workspace/stock/stock.json
@@ -34943,6 +35101,10 @@ msgstr ""
 msgid "Passport Number"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:43
+msgid "Password"
+msgstr ""
+
 #. Option for the 'Status' (Select) field in DocType 'Subscription'
 #: erpnext/accounts/doctype/subscription/subscription.json
 #: erpnext/accounts/doctype/subscription/subscription_list.js:10
@@ -34995,6 +35157,10 @@ msgstr ""
 #. Label of the pay_to_recd_from (Data) field in DocType 'Journal Entry'
 #: erpnext/accounts/doctype/journal_entry/journal_entry.json
 msgid "Pay To / Recd From"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:185
+msgid "PayPal Settings"
 msgstr ""
 
 #. Option for the 'Account Type' (Select) field in DocType 'Account'
@@ -35149,6 +35315,7 @@ msgstr ""
 #: erpnext/accounts/workspace/accounting/accounting.json
 #: erpnext/accounts/workspace/payables/payables.json
 #: erpnext/accounts/workspace/receivables/receivables.json
+#: erpnext/public/js/help_links.js:550
 msgid "Payment Entry"
 msgstr ""
 
@@ -35385,6 +35552,7 @@ msgstr ""
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.js:126
 #: erpnext/accounts/workspace/receivables/receivables.json
 #: erpnext/buying/doctype/purchase_order/purchase_order.js:441
+#: erpnext/public/js/help_links.js:557
 #: erpnext/selling/doctype/sales_order/sales_order.js:759
 msgid "Payment Request"
 msgstr ""
@@ -37434,6 +37602,14 @@ msgstr ""
 msgid "Point of Sale"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:499
+msgid "Point of Sale Invoice"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:506
+msgid "Point of Sale Profile"
+msgstr ""
+
 #. Label of a Link in the Selling Workspace
 #: erpnext/selling/workspace/selling/selling.json
 msgid "Point-of-Sale Profile"
@@ -37931,6 +38107,7 @@ msgstr ""
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/manufacturing/doctype/bom/bom.json
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.json
+#: erpnext/public/js/help_links.js:400
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/selling/report/customer_wise_item_price/customer_wise_item_price.py:44
@@ -38309,6 +38486,7 @@ msgid "Print Format"
 msgstr ""
 
 #. Label of a Link in the Settings Workspace
+#: erpnext/public/js/help_links.js:176
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Print Format Builder"
 msgstr ""
@@ -38345,6 +38523,7 @@ msgstr ""
 #: erpnext/buying/doctype/purchase_order/purchase_order.json
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.json
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation.json
+#: erpnext/public/js/help_links.js:92 erpnext/public/js/help_links.js:99
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/setup/doctype/print_heading/print_heading.json
@@ -38432,6 +38611,7 @@ msgstr ""
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
+#: erpnext/public/js/help_links.js:169
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/setup/workspace/settings/settings.json
@@ -38782,6 +38962,7 @@ msgstr ""
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/public/js/controllers/buying.js:287
 #: erpnext/public/js/controllers/buying.js:535
+#: erpnext/public/js/help_links.js:314
 #: erpnext/selling/doctype/product_bundle/product_bundle.json
 #: erpnext/selling/workspace/selling/selling.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
@@ -39640,6 +39821,7 @@ msgstr ""
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation_list.js:21
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/crm/doctype/contract/contract.json
+#: erpnext/public/js/help_links.js:520
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
 #: erpnext/stock/doctype/landed_cost_item/landed_cost_item.json
 #: erpnext/stock/doctype/landed_cost_purchase_receipt/landed_cost_purchase_receipt.json
@@ -39758,6 +39940,7 @@ msgstr ""
 #: erpnext/crm/doctype/contract/contract.json
 #: erpnext/manufacturing/doctype/blanket_order/blanket_order.js:54
 #: erpnext/manufacturing/doctype/production_plan_sub_assembly_item/production_plan_sub_assembly_item.json
+#: erpnext/public/js/help_links.js:359 erpnext/public/js/help_links.js:370
 #: erpnext/selling/doctype/sales_order/sales_order.js:141
 #: erpnext/selling/doctype/sales_order/sales_order.js:704
 #: erpnext/selling/doctype/sales_order_item/sales_order_item.json
@@ -39928,6 +40111,7 @@ msgstr ""
 #: erpnext/assets/doctype/asset/asset.json
 #: erpnext/buying/doctype/purchase_order/purchase_order.js:391
 #: erpnext/buying/doctype/purchase_order/purchase_order_list.js:57
+#: erpnext/public/js/help_links.js:648
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
 #: erpnext/stock/doctype/landed_cost_item/landed_cost_item.json
 #: erpnext/stock/doctype/landed_cost_purchase_receipt/landed_cost_purchase_receipt.json
@@ -40581,6 +40765,7 @@ msgstr ""
 #: erpnext/manufacturing/doctype/bom/bom.js:186
 #: erpnext/manufacturing/doctype/bom/bom.json
 #: erpnext/manufacturing/doctype/job_card/job_card.json
+#: erpnext/public/js/help_links.js:767
 #: erpnext/quality_management/workspace/quality/quality.json
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
@@ -41086,6 +41271,7 @@ msgstr ""
 #: erpnext/crm/doctype/opportunity/opportunity.json
 #: erpnext/crm/report/lead_details/lead_details.js:37
 #: erpnext/manufacturing/doctype/blanket_order/blanket_order.js:38
+#: erpnext/public/js/help_links.js:221
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/selling/doctype/sales_order/sales_order.js:778
 #: erpnext/selling/doctype/sales_order_item/sales_order_item.json
@@ -41164,6 +41350,10 @@ msgstr ""
 
 #: erpnext/selling/report/quotation_trends/quotation_trends.py:51
 msgid "Quoted Amount"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:338
+msgid "RFQ Video"
 msgstr ""
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.py:87
@@ -41643,6 +41833,10 @@ msgstr ""
 
 #: erpnext/manufacturing/doctype/bom/bom.py:652
 msgid "Raw Materials cannot be blank."
+msgstr ""
+
+#: erpnext/public/js/help_links.js:192
+msgid "Razorpay Settings"
 msgstr ""
 
 #: erpnext/buying/doctype/purchase_order/purchase_order.js:381
@@ -42126,6 +42320,22 @@ msgstr ""
 
 #: erpnext/regional/united_arab_emirates/utils.py:171
 msgid "Recoverable Standard Rated expenses should not be set when Reverse Charge Applicable is Y"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:528
+msgid "Recurring Purchase Invoice"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:363 erpnext/public/js/help_links.js:382
+msgid "Recurring Purchase Order"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:473 erpnext/public/js/help_links.js:492
+msgid "Recurring Sales Invoice"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:272 erpnext/public/js/help_links.js:287
+msgid "Recurring Sales Order"
 msgstr ""
 
 #. Label of the recurse_for (Float) field in DocType 'Pricing Rule'
@@ -42859,6 +43069,10 @@ msgstr ""
 msgid "Rename Tool"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:20
+msgid "Rename User"
+msgstr ""
+
 #: erpnext/accounts/doctype/account/account.py:511
 msgid "Renaming it is only allowed via parent company {0}, to avoid mismatch."
 msgstr ""
@@ -42904,6 +43118,10 @@ msgstr ""
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 #: erpnext/stock/doctype/stock_entry_type/stock_entry_type.json
 msgid "Repack"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:725
+msgid "Repack Entry"
 msgstr ""
 
 #. Group in Asset's connections
@@ -43216,6 +43434,7 @@ msgstr ""
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:70
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.py:270
 #: erpnext/buying/workspace/buying/buying.json
+#: erpnext/public/js/help_links.js:334
 #: erpnext/stock/doctype/material_request/material_request.js:176
 msgid "Request for Quotation"
 msgstr ""
@@ -44104,6 +44323,14 @@ msgstr ""
 #. Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Role Allowed to Set Frozen Accounts and Edit Frozen Entries"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:27
+msgid "Role Based Permissions"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:71
+msgid "Role Permissions Manager"
 msgstr ""
 
 #. Label of the credit_controller (Link) field in DocType 'Accounts Settings'
@@ -45340,7 +45567,7 @@ msgid "SMS Log"
 msgstr ""
 
 #. Label of a Link in the CRM Workspace
-#: erpnext/crm/workspace/crm/crm.json
+#: erpnext/crm/workspace/crm/crm.json erpnext/public/js/help_links.js:414
 msgid "SMS Settings"
 msgstr ""
 
@@ -45507,6 +45734,7 @@ msgstr ""
 #: erpnext/crm/doctype/contract/contract.json
 #: erpnext/projects/doctype/timesheet/timesheet.json
 #: erpnext/projects/doctype/timesheet_detail/timesheet_detail.json
+#: erpnext/public/js/help_links.js:461 erpnext/public/js/help_links.js:480
 #: erpnext/selling/doctype/quotation/quotation_list.js:22
 #: erpnext/selling/doctype/sales_order/sales_order.js:677
 #: erpnext/selling/doctype/sales_order/sales_order_list.js:67
@@ -45694,6 +45922,7 @@ msgstr ""
 #: erpnext/manufacturing/report/production_plan_summary/production_plan_summary.py:155
 #: erpnext/manufacturing/report/work_order_summary/work_order_summary.py:217
 #: erpnext/projects/doctype/project/project.json
+#: erpnext/public/js/help_links.js:268 erpnext/public/js/help_links.js:283
 #: erpnext/selling/doctype/quotation/quotation.js:113
 #: erpnext/selling/doctype/quotation/quotation_dashboard.py:11
 #: erpnext/selling/doctype/quotation/quotation_list.js:16
@@ -45964,6 +46193,8 @@ msgstr ""
 #: erpnext/maintenance/doctype/maintenance_schedule_detail/maintenance_schedule_detail.json
 #: erpnext/maintenance/doctype/maintenance_schedule_item/maintenance_schedule_item.json
 #: erpnext/maintenance/doctype/maintenance_visit_purpose/maintenance_visit_purpose.json
+#: erpnext/public/js/help_links.js:227 erpnext/public/js/help_links.js:299
+#: erpnext/public/js/help_links.js:827
 #: erpnext/selling/doctype/sales_team/sales_team.json
 #: erpnext/selling/report/sales_person_commission_summary/sales_person_commission_summary.js:8
 #: erpnext/selling/report/sales_person_commission_summary/sales_person_commission_summary.py:69
@@ -45988,6 +46219,10 @@ msgstr ""
 msgid "Sales Person Name"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:834
+msgid "Sales Person Target"
+msgstr ""
+
 #. Name of a report
 #. Label of a Link in the Selling Workspace
 #: erpnext/selling/report/sales_person_target_variance_based_on_item_group/sales_person_target_variance_based_on_item_group.json
@@ -45999,6 +46234,10 @@ msgstr ""
 #. 'Sales Person'
 #: erpnext/setup/doctype/sales_person/sales_person.json
 msgid "Sales Person Targets"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:838
+msgid "Sales Person in Transactions"
 msgstr ""
 
 #. Name of a report
@@ -46041,6 +46280,8 @@ msgid "Sales Representative"
 msgstr ""
 
 #: erpnext/accounts/report/gross_profit/gross_profit.py:857
+#: erpnext/public/js/help_links.js:469 erpnext/public/js/help_links.js:488
+#: erpnext/public/js/help_links.js:667 erpnext/public/js/help_links.js:678
 #: erpnext/stock/doctype/delivery_note/delivery_note.js:218
 msgid "Sales Return"
 msgstr ""
@@ -47075,6 +47316,7 @@ msgstr ""
 #. Label of a Link in the Selling Workspace
 #. Label of a Link in the Settings Workspace
 #. Label of a shortcut in the Settings Workspace
+#: erpnext/public/js/help_links.js:321
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 #: erpnext/selling/workspace/selling/selling.json
 #: erpnext/setup/workspace/settings/settings.json
@@ -47296,6 +47538,7 @@ msgstr ""
 #: erpnext/manufacturing/report/cost_of_poor_quality_report/cost_of_poor_quality_report.js:74
 #: erpnext/manufacturing/report/cost_of_poor_quality_report/cost_of_poor_quality_report.py:114
 #: erpnext/public/js/controllers/transaction.js:2348
+#: erpnext/public/js/help_links.js:747 erpnext/public/js/help_links.js:751
 #: erpnext/public/js/utils/serial_no_batch_selector.js:421
 #: erpnext/selling/doctype/installation_note_item/installation_note_item.json
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
@@ -48195,6 +48438,11 @@ msgstr ""
 msgid "Setting Item Locations..."
 msgstr ""
 
+#: erpnext/public/js/help_links.js:254 erpnext/public/js/help_links.js:261
+#: erpnext/public/js/help_links.js:393
+msgid "Setting Up Taxes"
+msgstr ""
+
 #: erpnext/setup/setup_wizard/setup_wizard.py:34
 msgid "Setting defaults"
 msgstr ""
@@ -48314,6 +48562,10 @@ msgstr ""
 #: erpnext/accounts/report/share_ledger/share_ledger.py:51
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Shareholder"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:39
+msgid "Sharing"
 msgstr ""
 
 #. Label of the shelf_life_in_days (Int) field in DocType 'Item'
@@ -49935,6 +50187,7 @@ msgstr ""
 #. Label of a shortcut in the Stock Workspace
 #: erpnext/accounts/doctype/journal_entry/journal_entry.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
+#: erpnext/public/js/help_links.js:719 erpnext/public/js/help_links.js:739
 #: erpnext/stock/doctype/pick_list/pick_list.js:123
 #: erpnext/stock/doctype/quality_inspection/quality_inspection.json
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
@@ -49963,6 +50216,10 @@ msgstr ""
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 #: erpnext/stock/doctype/stock_entry_type/stock_entry_type.json
 msgid "Stock Entry Type"
+msgstr ""
+
+#: erpnext/public/js/help_links.js:721
+msgid "Stock Entry Types"
 msgstr ""
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:1320
@@ -50151,7 +50408,7 @@ msgstr ""
 #. Name of a DocType
 #. Option for the 'Purpose' (Select) field in DocType 'Stock Reconciliation'
 #. Label of a Link in the Stock Workspace
-#: erpnext/setup/workspace/home/home.json
+#: erpnext/public/js/help_links.js:421 erpnext/setup/workspace/home/home.json
 #: erpnext/stock/doctype/item/item.py:610
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.json
 #: erpnext/stock/workspace/stock/stock.json
@@ -50594,6 +50851,10 @@ msgstr ""
 msgid "Straight Line"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:213
+msgid "Stripe Settings"
+msgstr ""
+
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:65
 msgid "Sub Assemblies"
 msgstr ""
@@ -50736,6 +50997,7 @@ msgstr ""
 #: erpnext/manufacturing/doctype/job_card/job_card_dashboard.py:10
 #: erpnext/manufacturing/doctype/material_request_plan_item/material_request_plan_item.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
+#: erpnext/public/js/help_links.js:386 erpnext/public/js/help_links.js:733
 #: erpnext/stock/doctype/material_request/material_request.json
 msgid "Subcontracting"
 msgstr ""
@@ -51322,6 +51584,7 @@ msgstr ""
 #: erpnext/crm/doctype/contract/contract.json
 #: erpnext/manufacturing/doctype/blanket_order/blanket_order.json
 #: erpnext/manufacturing/doctype/production_plan_sub_assembly_item/production_plan_sub_assembly_item.json
+#: erpnext/public/js/help_links.js:328 erpnext/public/js/help_links.js:330
 #: erpnext/public/js/purchase_trends_filters.js:50
 #: erpnext/public/js/purchase_trends_filters.js:63
 #: erpnext/regional/doctype/lower_deduction_certificate/lower_deduction_certificate.json
@@ -51484,6 +51747,10 @@ msgstr ""
 msgid "Supplier Item"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:378
+msgid "Supplier Item Code"
+msgstr ""
+
 #. Label of the supplier_items (Table) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Supplier Items"
@@ -51589,6 +51856,7 @@ msgstr ""
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.py:256
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/crm/doctype/opportunity/opportunity.js:81
+#: erpnext/public/js/help_links.js:345
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/stock/doctype/material_request/material_request.js:184
 msgid "Supplier Quotation"
@@ -51950,6 +52218,7 @@ msgstr ""
 
 #. Label of a Link in the Settings Workspace
 #. Label of a shortcut in the Settings Workspace
+#: erpnext/public/js/help_links.js:50
 #: erpnext/setup/workspace/settings/settings.json
 msgid "System Settings"
 msgstr ""
@@ -53027,6 +53296,7 @@ msgstr ""
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation.json
 #: erpnext/manufacturing/doctype/blanket_order/blanket_order.json
 #: erpnext/manufacturing/doctype/blanket_order_item/blanket_order_item.json
+#: erpnext/public/js/help_links.js:120
 #: erpnext/selling/doctype/quotation/quotation.json
 #: erpnext/setup/doctype/terms_and_conditions/terms_and_conditions.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
@@ -53122,6 +53392,7 @@ msgstr ""
 #: erpnext/crm/workspace/crm/crm.json
 #: erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.json
 #: erpnext/maintenance/doctype/maintenance_visit/maintenance_visit.json
+#: erpnext/public/js/help_links.js:428
 #: erpnext/public/js/sales_trends_filters.js:27
 #: erpnext/selling/doctype/customer/customer.json
 #: erpnext/selling/doctype/installation_note/installation_note.json
@@ -57056,6 +57327,10 @@ msgstr ""
 msgid "User ID not set for Employee {0}"
 msgstr ""
 
+#: erpnext/public/js/help_links.js:35
+msgid "User Permissions"
+msgstr ""
+
 #. Label of the user_remark (Small Text) field in DocType 'Journal Entry'
 #. Label of the user_remark (Small Text) field in DocType 'Journal Entry
 #. Account'
@@ -58162,7 +58437,7 @@ msgstr ""
 #: erpnext/manufacturing/report/production_planning_report/production_planning_report.py:365
 #: erpnext/manufacturing/report/production_planning_report/production_planning_report.py:408
 #: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.js:8
-#: erpnext/public/js/stock_analytics.js:69
+#: erpnext/public/js/help_links.js:743 erpnext/public/js/stock_analytics.js:69
 #: erpnext/public/js/stock_reservation.js:108
 #: erpnext/public/js/stock_reservation.js:301 erpnext/public/js/utils.js:537
 #: erpnext/public/js/utils/serial_no_batch_selector.js:95
@@ -58957,6 +59232,7 @@ msgstr ""
 #: erpnext/manufacturing/report/work_order_consumed_materials/work_order_consumed_materials.js:29
 #: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.py:104
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
+#: erpnext/public/js/help_links.js:858
 #: erpnext/selling/doctype/sales_order/sales_order.js:667
 #: erpnext/stock/doctype/material_request/material_request.js:192
 #: erpnext/stock/doctype/material_request/material_request.json
@@ -59077,6 +59353,7 @@ msgstr ""
 
 #. Label of a Card Break in the Settings Workspace
 #. Label of a Link in the Settings Workspace
+#: erpnext/public/js/help_links.js:433
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Workflow"
 msgstr ""
@@ -59129,7 +59406,7 @@ msgstr ""
 #: erpnext/manufacturing/report/job_card_summary/job_card_summary.js:74
 #: erpnext/manufacturing/report/job_card_summary/job_card_summary.py:160
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
-#: erpnext/templates/generators/bom.html:70
+#: erpnext/public/js/help_links.js:865 erpnext/templates/generators/bom.html:70
 msgid "Workstation"
 msgstr ""
 
