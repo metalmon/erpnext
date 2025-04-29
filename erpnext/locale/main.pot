@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERPNext VERSION\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
-"POT-Creation-Date: 2025-04-29 15:03+0000\n"
-"PO-Revision-Date: 2025-04-29 15:03+0000\n"
+"POT-Creation-Date: 2025-04-29 16:20+0000\n"
+"PO-Revision-Date: 2025-04-29 16:20+0000\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: hello@frappe.io\n"
 "MIME-Version: 1.0\n"
@@ -9357,7 +9357,7 @@ msgstr ""
 msgid "Cannot Optimize Route as Driver Address is Missing."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:182
+#: erpnext/setup/doctype/employee/employee.py:264
 msgid "Cannot Relieve Employee"
 msgstr ""
 
@@ -14860,12 +14860,17 @@ msgstr ""
 msgid "Date must be between {0} and {1}"
 msgstr ""
 
+#. Label of the date_of_joining (Date) field in DocType 'Employee'
+#: erpnext/setup/doctype/employee/employee.json
+msgid "Date of Assumption of Duties"
+msgstr ""
+
 #. Label of the date_of_birth (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Date of Birth"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:147
+#: erpnext/setup/doctype/employee/employee.py:229
 msgid "Date of Birth cannot be greater than today."
 msgstr ""
 
@@ -14891,11 +14896,6 @@ msgstr ""
 #. Label of the date_of_issue (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Date of Issue"
-msgstr ""
-
-#. Label of the date_of_joining (Date) field in DocType 'Employee'
-#: erpnext/setup/doctype/employee/employee.json
-msgid "Date of Joining"
 msgstr ""
 
 #: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.py:267
@@ -18702,7 +18702,7 @@ msgstr ""
 msgid "Employee User Id"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:214
+#: erpnext/setup/doctype/employee/employee.py:296
 msgid "Employee cannot report to himself."
 msgstr ""
 
@@ -19534,11 +19534,6 @@ msgstr ""
 
 #: erpnext/setup/setup_wizard/data/marketing_source.txt:1
 msgid "Existing Customer"
-msgstr ""
-
-#. Label of the exit (Tab Break) field in DocType 'Employee'
-#: erpnext/setup/doctype/employee/employee.json
-msgid "Exit"
 msgstr ""
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:254
@@ -32704,6 +32699,11 @@ msgstr ""
 msgid "Off"
 msgstr ""
 
+#. Label of the exit (Tab Break) field in DocType 'Employee'
+#: erpnext/setup/doctype/employee/employee.json
+msgid "Offboarding "
+msgstr ""
+
 #. Label of the scheduled_confirmation_date (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Offer Date"
@@ -37032,7 +37032,7 @@ msgstr ""
 msgid "Please enter quantity for item {0}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:184
+#: erpnext/setup/doctype/employee/employee.py:266
 msgid "Please enter relieving date."
 msgstr ""
 
@@ -37060,7 +37060,7 @@ msgstr ""
 msgid "Please enter valid email address"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:222
+#: erpnext/setup/doctype/employee/employee.py:304
 msgid "Please enter {0}"
 msgstr ""
 
@@ -37096,7 +37096,7 @@ msgstr ""
 msgid "Please keep one Applicable Charges, when 'Distribute Charges Based On' is 'Distribute Manually'. For more charges, please create another Landed Cost Voucher."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:181
+#: erpnext/setup/doctype/employee/employee.py:263
 msgid "Please make sure the employees above report to another Active employee."
 msgstr ""
 
@@ -37546,7 +37546,7 @@ msgstr ""
 msgid "Please set a default Holiday List for Company {0}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:269
+#: erpnext/setup/doctype/employee/employee.py:351
 msgid "Please set a default Holiday List for Employee {0} or Company {1}"
 msgstr ""
 
@@ -53876,7 +53876,7 @@ msgstr ""
 msgid "The following deleted attributes exist in Variants but not in the Template. You can either delete the Variants or keep the attribute(s) in template."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:176
+#: erpnext/setup/doctype/employee/employee.py:258
 msgid "The following employees are currently still reporting to {0}:"
 msgstr ""
 
@@ -57629,7 +57629,7 @@ msgstr ""
 msgid "User has not applied rule on the invoice {0}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:191
+#: erpnext/setup/doctype/employee/employee.py:273
 msgid "User {0} does not exist"
 msgstr ""
 
@@ -57637,19 +57637,19 @@ msgstr ""
 msgid "User {0} doesn't have any default POS Profile. Check Default at Row {1} for this User."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:208
+#: erpnext/setup/doctype/employee/employee.py:290
 msgid "User {0} is already assigned to Employee {1}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:193
+#: erpnext/setup/doctype/employee/employee.py:275
 msgid "User {0} is disabled"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:246
+#: erpnext/setup/doctype/employee/employee.py:328
 msgid "User {0}: Removed Employee Self Service role as there is no mapped employee."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:241
+#: erpnext/setup/doctype/employee/employee.py:323
 msgid "User {0}: Removed Employee role as there is no mapped employee."
 msgstr ""
 
