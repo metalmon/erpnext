@@ -251,6 +251,15 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 	}
 
+	use_serial_batch_fields(frm, cdt, cdn) {
+		const item = locals[cdt][cdn];
+		if (!item.use_serial_batch_fields) {
+			frappe.model.set_value(cdt, cdn, "serial_no", "");
+			frappe.model.set_value(cdt, cdn, "batch_no", "");
+			frappe.model.set_value(cdt, cdn, "rejected_serial_no", "");
+		}
+	}
+
 	set_fields_onload_for_line_item() {
 		if (this.frm.is_new() && this.frm.doc?.items) {
 			this.frm.doc.items.forEach(item => {
@@ -786,6 +795,10 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			return;
 		}
 
+		if (item.serial_no) {
+			item.use_serial_batch_fields = 1
+		}
+
 		if (item && item.serial_no) {
 			if (!item.item_code) {
 				this.frm.trigger("item_code", cdt, cdn);
@@ -1033,39 +1046,48 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 	}
 
-	due_date() {
+	due_date(doc, cdt) {
 		// due_date is to be changed, payment terms template and/or payment schedule must
 		// be removed as due_date is automatically changed based on payment terms
+		if (doc.doctype !== cdt) {
+			// triggered by change to the due_date field in payment schedule child table
+			// do nothing to avoid infinite clearing loop
+			return;
+		}
 
 		// if there is only one row in payment schedule child table, set its due date as the due date
-		if (this.frm.doc.payment_schedule.length == 1){
-			this.frm.doc.payment_schedule[0].due_date = this.frm.doc.due_date;
+		if (doc.payment_schedule.length == 1){
+			doc.payment_schedule[0].due_date = doc.due_date;
 			this.frm.refresh_field("payment_schedule");
 			return
 		}
 
 		if (
-			this.frm.doc.due_date &&
+			doc.due_date &&
 			!this.frm.updating_party_details &&
-			!this.frm.doc.is_pos &&
+			!doc.is_pos &&
 			(
-				this.frm.doc.payment_terms_template ||
-				this.frm.doc.payment_schedule?.length
+				doc.payment_terms_template ||
+				doc.payment_schedule?.length
 			)
 		) {
 			const to_clear = [];
-			if (this.frm.doc.payment_terms_template) {
-				to_clear.push("Payment Terms Template");
+			if (doc.payment_terms_template) {
+				to_clear.push(__(frappe.meta.get_label(cdt, "payment_terms_template")));
 			}
 
-			if (this.frm.doc.payment_schedule?.length) {
-				to_clear.push("Payment Schedule Table");
+			if (doc.payment_schedule?.length) {
+				to_clear.push(__(frappe.meta.get_label(cdt, "payment_schedule")));
 			}
 
 			frappe.confirm(
 				__(
-					"Do you want to clear the selected {0}?",
-					[frappe.utils.comma_and(to_clear.map(dt => __(dt)))]
+					"For the new {0} to take effect, would you like to clear the current {1}?",
+					[
+						__(frappe.meta.get_label(cdt, "due_date")),
+						frappe.utils.comma_and(to_clear)
+					],
+					"Clear payment terms template and/or payment schedule when due date is changed"
 				),
 				() => {
 					this.frm.set_value("payment_terms_template", "");
@@ -1112,13 +1134,14 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	currency() {
 		// The transaction date be either transaction_date (from orders) or posting_date (from invoices)
 		let transaction_date = this.frm.doc.transaction_date || this.frm.doc.posting_date;
+		let inter_company_reference = this.frm.doc.inter_company_order_reference || this.frm.doc.inter_company_invoice_reference;
 
 		let me = this;
 		this.set_dynamic_labels();
 		let company_currency = this.get_company_currency();
 		// Added `load_after_mapping` to determine if document is loading after mapping from another doc
 		if(this.frm.doc.currency && this.frm.doc.currency !== company_currency
-				&& !this.frm.doc.__onload?.load_after_mapping) {
+				&& (!this.frm.doc.__onload?.load_after_mapping || inter_company_reference)) {
 
 			this.get_exchange_rate(transaction_date, this.frm.doc.currency, company_currency,
 				function(exchange_rate) {
@@ -1336,13 +1359,6 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			let mapped_rows = mappped_fields.filter(d => first_row[d])
 
 			return mapped_rows?.length > 0;
-		}
-	}
-
-	batch_no(doc, cdt, cdn) {
-		let item = frappe.get_doc(cdt, cdn);
-		if (!this.is_a_mapped_document(item)) {
-			this.apply_price_list(item, true);
 		}
 	}
 
@@ -1571,7 +1587,12 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 	batch_no(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
-		if (row.use_serial_batch_fields && row.batch_no) {
+
+		if (row.batch_no) {
+			row.use_serial_batch_fields = 1
+		}
+
+		if (row.batch_no) {
 			var params = this._get_args(row);
 			params.batch_no = row.batch_no;
 			params.uom = row.uom;

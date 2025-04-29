@@ -1281,12 +1281,13 @@ def get_account_balances(accounts, company):
 	return accounts
 
 
-def create_payment_gateway_account(gateway, payment_channel="Email"):
+def create_payment_gateway_account(gateway, payment_channel="Email", company=None):
 	from erpnext.setup.setup_wizard.operations.install_fixtures import create_bank_account
 
-	company = frappe.get_cached_value("Global Defaults", "Global Defaults", "default_company")
 	if not company:
-		return
+		company = frappe.get_cached_value("Global Defaults", "Global Defaults", "default_company")
+		if not company:
+			return
 
 	# NOTE: we translate Payment Gateway account name because that is going to be used by the end user
 	bank_account = frappe.db.get_value(
@@ -1888,14 +1889,17 @@ def update_voucher_outstanding(voucher_type, voucher_no, account, party_type, pa
 	):
 		outstanding = voucher_outstanding[0]
 		ref_doc = frappe.get_doc(voucher_type, voucher_no)
+		outstanding_amount = flt(
+			outstanding["outstanding_in_account_currency"], ref_doc.precision("outstanding_amount")
+		)
 
 		# Didn't use db_set for optimisation purpose
-		ref_doc.outstanding_amount = outstanding["outstanding_in_account_currency"] or 0.0
+		ref_doc.outstanding_amount = outstanding_amount
 		frappe.db.set_value(
 			voucher_type,
 			voucher_no,
 			"outstanding_amount",
-			outstanding["outstanding_in_account_currency"] or 0.0,
+			outstanding_amount,
 		)
 
 		ref_doc.set_status(update=True)

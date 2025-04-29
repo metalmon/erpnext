@@ -75,9 +75,13 @@ erpnext.sales_common = {
 
 				if (this.frm.fields_dict["items"].grid.get_field("item_code")) {
 					this.frm.set_query("item_code", "items", function () {
+						let customer = me.frm.doc.customer;
+						if (me.frm.doc.doctype == "Quotation" && me.frm.doc.quotation_to == "Customer") {
+							customer = me.frm.doc.party_name;
+						}
 						return {
 							query: "erpnext.controllers.queries.item_query",
-							filters: { is_sales_item: 1, customer: me.frm.doc.customer, has_variants: 0 },
+							filters: { is_sales_item: 1, customer: customer, has_variants: 0 },
 						};
 					});
 				}
@@ -109,6 +113,33 @@ erpnext.sales_common = {
 				);
 
 				this.toggle_editable_price_list_rate();
+			}
+
+			company() {
+				super.company();
+				this.set_default_company_address();
+			}
+
+			set_default_company_address() {
+				if (!frappe.meta.has_field(this.frm.doc.doctype, "company_address")) return;
+				var me = this;
+				if (this.frm.doc.company) {
+					frappe.call({
+						method: "erpnext.setup.doctype.company.company.get_default_company_address",
+						args: {
+							name: this.frm.doc.company,
+							existing_address: this.frm.doc.company_address || "",
+						},
+						debounce: 2000,
+						callback: function (r) {
+							if (r.message) {
+								me.frm.set_value("company_address", r.message);
+							} else {
+								me.frm.set_value("company_address", "");
+							}
+						},
+					});
+				}
 			}
 
 			customer() {

@@ -144,6 +144,11 @@ class QualityInspection(Document):
 			child_row_references.remove(child_row_references[0])
 
 	def validate_inspection_required(self):
+		if frappe.db.get_single_value(
+			"Stock Settings", "allow_to_make_quality_inspection_after_purchase_or_delivery"
+		):
+			return
+
 		if self.reference_type in ["Purchase Receipt", "Purchase Invoice"] and not frappe.get_cached_value(
 			"Item", self.item_code, "inspection_required_before_purchase"
 		):
@@ -198,10 +203,11 @@ class QualityInspection(Document):
 		self.get_item_specification_details()
 
 	def on_update(self):
-		if (
-			frappe.db.get_single_value("Stock Settings", "action_if_quality_inspection_is_not_submitted")
-			== "Warn"
-		):
+		action_if_qi_in_draft = frappe.db.get_single_value(
+			"Stock Settings", "action_if_quality_inspection_is_not_submitted"
+		)
+
+		if not action_if_qi_in_draft or action_if_qi_in_draft == "Warn":
 			self.update_qc_reference()
 
 	def on_submit(self):
