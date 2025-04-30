@@ -1,7 +1,8 @@
+from frappe import _
 app_name = "erpnext"
-app_title = "ERPNext"
-app_publisher = "Frappe Technologies Pvt. Ltd."
-app_description = """ERP made simple"""
+app_title = _("Enterprise")
+app_publisher = _("Frappe Technologies Pvt. Ltd.")
+app_description = _("ERP made simple")
 app_icon = "fa fa-th"
 app_color = "#e74c3c"
 app_email = "hello@frappe.io"

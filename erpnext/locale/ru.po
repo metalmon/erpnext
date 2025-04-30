@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERPNext VERSION\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
-"POT-Creation-Date: 2025-04-29 16:20+0000\n"
-"PO-Revision-Date: 2025-04-29 20:21+0400\n"
+"POT-Creation-Date: 2025-04-30 19:23+0000\n"
+"PO-Revision-Date: 2025-04-30 23:24+0400\n"
 "Last-Translator: AlexKuzin <dev@olimpicfresh.ru>\n"
 "Language-Team: info@erpnext.com\n"
 "Language: ru\n"
@@ -9371,7 +9371,7 @@ msgstr "Невозможно объединить"
 msgid "Cannot Optimize Route as Driver Address is Missing."
 msgstr "Невозможно оптимизировать маршрут, так как адрес водителя отсутствует."
 
-#: erpnext/setup/doctype/employee/employee.py:264
+#: erpnext/setup/doctype/employee/employee.py:182
 msgid "Cannot Relieve Employee"
 msgstr "Невозможно уволить сотрудника"
 
@@ -10483,7 +10483,7 @@ msgstr "Заключительный текст"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.html:135
 msgid "Closing [Opening + Total] "
-msgstr "Закрытие [Открытие + Итого]"
+msgstr "Закрытие [Открытие + Итого] "
 
 #. Label of the code (Data) field in DocType 'Incoterm'
 #: erpnext/edi/doctype/code_list/code_list_import.js:172
@@ -14847,7 +14847,7 @@ msgstr "Дата вступления в должность"
 msgid "Date of Birth"
 msgstr "Дата рождения"
 
-#: erpnext/setup/doctype/employee/employee.py:229
+#: erpnext/setup/doctype/employee/employee.py:147
 msgid "Date of Birth cannot be greater than today."
 msgstr "Дата рождения не может быть больше текущей даты."
 
@@ -18130,6 +18130,10 @@ msgstr "Единица измерения заряда"
 msgid "EMU of current"
 msgstr "Единица измерения текущего"
 
+#: erpnext/hooks.py:5
+msgid "ERP made simple"
+msgstr "ERP - это просто"
+
 #. Label of the user_id (Data) field in DocType 'Employee Group Table'
 #: erpnext/setup/doctype/employee_group_table/employee_group_table.json
 msgid "ERPNext User ID"
@@ -18610,7 +18614,7 @@ msgstr "Табельный номер"
 msgid "Employee User Id"
 msgstr "Идентификатор пользователя сотрудника"
 
-#: erpnext/setup/doctype/employee/employee.py:296
+#: erpnext/setup/doctype/employee/employee.py:214
 msgid "Employee cannot report to himself."
 msgstr "Сотрудник не может быть подчинен самому себе."
 
@@ -19046,6 +19050,10 @@ msgstr "Введите количество для производства.  С
 #: erpnext/selling/page/point_of_sale/pos_payment.js:437
 msgid "Enter {0} amount."
 msgstr "Введите сумму {0}."
+
+#: erpnext/hooks.py:3
+msgid "Enterprise"
+msgstr "Предприятие"
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:22
 msgid "Entertainment & Leisure"
@@ -20904,6 +20912,10 @@ msgstr "URL форума"
 #: erpnext/public/js/help_links.js:795
 msgid "Fractions in UOM"
 msgstr "Дроби в единицах измерения"
+
+#: erpnext/hooks.py:4
+msgid "Frappe Technologies Pvt. Ltd."
+msgstr "Frappe Technologies Pvt. Ltd."
 
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:4
@@ -32498,7 +32510,7 @@ msgstr "Выключено"
 #. Label of the exit (Tab Break) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Offboarding "
-msgstr "Увольнение"
+msgstr "Увольнение "
 
 #. Label of the scheduled_confirmation_date (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -36801,7 +36813,7 @@ msgstr "Укажите родительский центр затрат"
 msgid "Please enter quantity for item {0}"
 msgstr "Пожалуйста, введите количество для товара {0}"
 
-#: erpnext/setup/doctype/employee/employee.py:266
+#: erpnext/setup/doctype/employee/employee.py:184
 msgid "Please enter relieving date."
 msgstr "Пожалуйста, введите дату увольнения."
 
@@ -36829,7 +36841,7 @@ msgstr "Пожалуйста, введите корректные начальн
 msgid "Please enter valid email address"
 msgstr "Пожалуйста, введите корректный адрес электронной почты"
 
-#: erpnext/setup/doctype/employee/employee.py:304
+#: erpnext/setup/doctype/employee/employee.py:222
 msgid "Please enter {0}"
 msgstr "Пожалуйста, введите {0}"
 
@@ -36865,7 +36877,7 @@ msgstr "Пожалуйста, импортируйте счета в разре�
 msgid "Please keep one Applicable Charges, when 'Distribute Charges Based On' is 'Distribute Manually'. For more charges, please create another Landed Cost Voucher."
 msgstr "Пожалуйста, укажите одну статью затрат, если «Распределение затрат» установлено как «Распределять вручную». Для добавления большего количества статей затрат, пожалуйста, создайте другой документ «Затраты на доставку»."
 
-#: erpnext/setup/doctype/employee/employee.py:263
+#: erpnext/setup/doctype/employee/employee.py:181
 msgid "Please make sure the employees above report to another Active employee."
 msgstr "Убедитесь, что указанные сотрудники подчиняются другому активному сотруднику."
 
@@ -37315,7 +37327,7 @@ msgstr "Пожалуйста, укажите Поставщика для Тов�
 msgid "Please set a default Holiday List for Company {0}"
 msgstr "Пожалуйста, установите список выходных по умолчанию для компании {0}"
 
-#: erpnext/setup/doctype/employee/employee.py:351
+#: erpnext/setup/doctype/employee/employee.py:269
 msgid "Please set a default Holiday List for Employee {0} or Company {1}"
 msgstr "Пожалуйста, установите список праздничных дней по умолчанию для сотрудника {0} или компании {1}"
 
@@ -46891,7 +46903,7 @@ msgstr "Выберите аналитику"
 #. Label of the dispatch_address (Link) field in DocType 'Purchase Invoice'
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
 msgid "Select Dispatch Address "
-msgstr "Выберите адрес отправителя"
+msgstr "Выберите адрес отправителя "
 
 #. Label of the select_doctype (Select) field in DocType 'Rename Tool'
 #: erpnext/utilities/doctype/rename_tool/rename_tool.json
@@ -53454,7 +53466,7 @@ msgstr "Срок годности следующих партий истек, п
 msgid "The following deleted attributes exist in Variants but not in the Template. You can either delete the Variants or keep the attribute(s) in template."
 msgstr "В вариантах присутствуют следующие удаленные атрибуты, отсутствующие в шаблоне.  Вы можете либо удалить варианты, либо сохранить атрибут(ы) в шаблоне."
 
-#: erpnext/setup/doctype/employee/employee.py:258
+#: erpnext/setup/doctype/employee/employee.py:176
 msgid "The following employees are currently still reporting to {0}:"
 msgstr "В настоящее время следующие сотрудники подчиняются {0}:"
 
@@ -57162,7 +57174,7 @@ msgstr "Время решения пользователем"
 msgid "User has not applied rule on the invoice {0}"
 msgstr "Пользователь не применил правило к счету {0}"
 
-#: erpnext/setup/doctype/employee/employee.py:273
+#: erpnext/setup/doctype/employee/employee.py:191
 msgid "User {0} does not exist"
 msgstr "Пользователь {0} не существует"
 
@@ -57170,19 +57182,19 @@ msgstr "Пользователь {0} не существует"
 msgid "User {0} doesn't have any default POS Profile. Check Default at Row {1} for this User."
 msgstr "Пользователь {0} не имеет профиля ККМ по умолчанию. Проверьте поле «По умолчанию» в строке {1} для этого пользователя."
 
-#: erpnext/setup/doctype/employee/employee.py:290
+#: erpnext/setup/doctype/employee/employee.py:208
 msgid "User {0} is already assigned to Employee {1}"
 msgstr "Пользователь {0} уже назначен сотруднику {1}"
 
-#: erpnext/setup/doctype/employee/employee.py:275
+#: erpnext/setup/doctype/employee/employee.py:193
 msgid "User {0} is disabled"
 msgstr "Пользователь {0} отключен"
 
-#: erpnext/setup/doctype/employee/employee.py:328
+#: erpnext/setup/doctype/employee/employee.py:246
 msgid "User {0}: Removed Employee Self Service role as there is no mapped employee."
 msgstr "Пользователь {0}: Роль «Самообслуживание сотрудника» удалена, так как сотрудник не назначен."
 
-#: erpnext/setup/doctype/employee/employee.py:323
+#: erpnext/setup/doctype/employee/employee.py:241
 msgid "User {0}: Removed Employee role as there is no mapped employee."
 msgstr "Пользователь {0}: Роль сотрудника удалена, так как не найден соответствующий сотрудник."
 

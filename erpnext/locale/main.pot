@@ -1,14 +1,14 @@
-# Translations template for ERPNext.
+# Translations template for Enterprise.
 # Copyright (C) 2025 Frappe Technologies Pvt. Ltd.
-# This file is distributed under the same license as the ERPNext project.
+# This file is distributed under the same license as the Enterprise project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ERPNext VERSION\n"
+"Project-Id-Version: Enterprise VERSION\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
-"POT-Creation-Date: 2025-04-29 16:20+0000\n"
-"PO-Revision-Date: 2025-04-29 16:20+0000\n"
+"POT-Creation-Date: 2025-04-30 19:23+0000\n"
+"PO-Revision-Date: 2025-04-30 19:23+0000\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: hello@frappe.io\n"
 "MIME-Version: 1.0\n"
@@ -9357,7 +9357,7 @@ msgstr ""
 msgid "Cannot Optimize Route as Driver Address is Missing."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:264
+#: erpnext/setup/doctype/employee/employee.py:182
 msgid "Cannot Relieve Employee"
 msgstr ""
 
@@ -14870,7 +14870,7 @@ msgstr ""
 msgid "Date of Birth"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:229
+#: erpnext/setup/doctype/employee/employee.py:147
 msgid "Date of Birth cannot be greater than today."
 msgstr ""
 
@@ -18222,6 +18222,10 @@ msgstr ""
 msgid "EMU of current"
 msgstr ""
 
+#: erpnext/hooks.py:5
+msgid "ERP made simple"
+msgstr ""
+
 #. Label of the user_id (Data) field in DocType 'Employee Group Table'
 #: erpnext/setup/doctype/employee_group_table/employee_group_table.json
 msgid "ERPNext User ID"
@@ -18702,7 +18706,7 @@ msgstr ""
 msgid "Employee User Id"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:296
+#: erpnext/setup/doctype/employee/employee.py:214
 msgid "Employee cannot report to himself."
 msgstr ""
 
@@ -19135,6 +19139,10 @@ msgstr ""
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:437
 msgid "Enter {0} amount."
+msgstr ""
+
+#: erpnext/hooks.py:3
+msgid "Enterprise"
 msgstr ""
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:22
@@ -20993,6 +21001,10 @@ msgstr ""
 
 #: erpnext/public/js/help_links.js:795
 msgid "Fractions in UOM"
+msgstr ""
+
+#: erpnext/hooks.py:4
+msgid "Frappe Technologies Pvt. Ltd."
 msgstr ""
 
 #. Title of an incoterm
@@ -37032,7 +37044,7 @@ msgstr ""
 msgid "Please enter quantity for item {0}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:266
+#: erpnext/setup/doctype/employee/employee.py:184
 msgid "Please enter relieving date."
 msgstr ""
 
@@ -37060,7 +37072,7 @@ msgstr ""
 msgid "Please enter valid email address"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:304
+#: erpnext/setup/doctype/employee/employee.py:222
 msgid "Please enter {0}"
 msgstr ""
 
@@ -37096,7 +37108,7 @@ msgstr ""
 msgid "Please keep one Applicable Charges, when 'Distribute Charges Based On' is 'Distribute Manually'. For more charges, please create another Landed Cost Voucher."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:263
+#: erpnext/setup/doctype/employee/employee.py:181
 msgid "Please make sure the employees above report to another Active employee."
 msgstr ""
 
@@ -37546,7 +37558,7 @@ msgstr ""
 msgid "Please set a default Holiday List for Company {0}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:351
+#: erpnext/setup/doctype/employee/employee.py:269
 msgid "Please set a default Holiday List for Employee {0} or Company {1}"
 msgstr ""
 
@@ -53876,7 +53888,7 @@ msgstr ""
 msgid "The following deleted attributes exist in Variants but not in the Template. You can either delete the Variants or keep the attribute(s) in template."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:258
+#: erpnext/setup/doctype/employee/employee.py:176
 msgid "The following employees are currently still reporting to {0}:"
 msgstr ""
 
@@ -57629,7 +57641,7 @@ msgstr ""
 msgid "User has not applied rule on the invoice {0}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:273
+#: erpnext/setup/doctype/employee/employee.py:191
 msgid "User {0} does not exist"
 msgstr ""
 
@@ -57637,19 +57649,19 @@ msgstr ""
 msgid "User {0} doesn't have any default POS Profile. Check Default at Row {1} for this User."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:290
+#: erpnext/setup/doctype/employee/employee.py:208
 msgid "User {0} is already assigned to Employee {1}"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:275
+#: erpnext/setup/doctype/employee/employee.py:193
 msgid "User {0} is disabled"
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:328
+#: erpnext/setup/doctype/employee/employee.py:246
 msgid "User {0}: Removed Employee Self Service role as there is no mapped employee."
 msgstr ""
 
-#: erpnext/setup/doctype/employee/employee.py:323
+#: erpnext/setup/doctype/employee/employee.py:241
 msgid "User {0}: Removed Employee role as there is no mapped employee."
 msgstr ""
 
