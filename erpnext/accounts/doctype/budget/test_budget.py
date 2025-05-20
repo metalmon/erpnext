@@ -3,18 +3,29 @@
 import unittest
 
 import frappe
-from frappe.tests import IntegrationTestCase
 from frappe.utils import now_datetime, nowdate
 
-from erpnext.accounts.doctype.budget.budget import BudgetError, get_actual_expense
+from erpnext.accounts.doctype.budget.budget import (
+	BudgetError,
+	get_accumulated_monthly_budget,
+	get_actual_expense,
+)
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 from erpnext.accounts.utils import get_fiscal_year
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
+from erpnext.tests.utils import ERPNextTestSuite
 
-EXTRA_TEST_RECORD_DEPENDENCIES = ["Monthly Distribution"]
 
+class TestBudget(ERPNextTestSuite):
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.make_monthly_distribution()
+		cls.make_projects()
 
-class TestBudget(IntegrationTestCase):
+	def setUp(self):
+		frappe.db.set_single_value("Accounts Settings", "use_new_budget_controller", True)
+
 	def test_monthly_budget_crossed_ignore(self):
 		set_total_expense_zero(nowdate(), "cost_center")
 
@@ -43,10 +54,13 @@ class TestBudget(IntegrationTestCase):
 
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
@@ -63,10 +77,13 @@ class TestBudget(IntegrationTestCase):
 
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
@@ -123,6 +140,7 @@ class TestBudget(IntegrationTestCase):
 
 		budget.load_from_db()
 		budget.cancel()
+		mr.cancel()
 
 	def test_monthly_budget_crossed_for_po(self):
 		budget = make_budget(
@@ -135,7 +153,12 @@ class TestBudget(IntegrationTestCase):
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 		frappe.db.set_value("Budget", budget.name, "fiscal_year", fiscal_year)
 
-		po = create_purchase_order(transaction_date=nowdate(), do_not_submit=True)
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
+		po = create_purchase_order(
+			transaction_date=nowdate(), qty=1, rate=accumulated_limit + 1, do_not_submit=True
+		)
 
 		po.set_missing_values()
 
@@ -153,11 +176,13 @@ class TestBudget(IntegrationTestCase):
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
 		project = frappe.get_value("Project", {"project_name": "_Test Project"})
-
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center - _TC",
 			project=project,
 			posting_date=nowdate(),
@@ -272,10 +297,13 @@ class TestBudget(IntegrationTestCase):
 		budget = make_budget(budget_against="Cost Center", cost_center="_Test Company - _TC")
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center 2 - _TC",
 			posting_date=nowdate(),
 		)
@@ -302,10 +330,13 @@ class TestBudget(IntegrationTestCase):
 		budget = make_budget(budget_against="Cost Center", cost_center=cost_center)
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			cost_center,
 			posting_date=nowdate(),
 		)
@@ -423,6 +454,7 @@ def make_budget(**args):
 
 	monthly_distribution = frappe.get_doc("Monthly Distribution", "_Test Distribution")
 	monthly_distribution.fiscal_year = fiscal_year
+	monthly_distribution.save()
 
 	budget.fiscal_year = fiscal_year
 	budget.monthly_distribution = "_Test Distribution"

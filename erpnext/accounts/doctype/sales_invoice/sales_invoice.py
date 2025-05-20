@@ -39,7 +39,7 @@ from erpnext.assets.doctype.asset.depreciation import (
 	get_gl_entries_on_asset_disposal,
 	get_gl_entries_on_asset_regain,
 	reset_depreciation_schedule,
-	reverse_depreciation_entry_made_after_disposal,
+	reverse_depreciation_entry_made_on_disposal,
 )
 from erpnext.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from erpnext.controllers.accounts_controller import validate_account_head
@@ -368,21 +368,34 @@ class SalesInvoice(SellingController):
 		validate_docs_for_deferred_accounting([self.name], [])
 
 	def validate_fixed_asset(self):
-		for d in self.get("items"):
-			if d.is_fixed_asset and d.meta.get_field("asset") and d.asset:
-				asset = frappe.get_doc("Asset", d.asset)
-				if self.doctype == "Sales Invoice" and self.docstatus == 1:
-					if self.update_stock:
-						frappe.throw(_("'Update Stock' cannot be checked for fixed asset sale"))
+		if self.doctype != "Sales Invoice":
+			return
 
-					elif asset.status in ("Scrapped", "Cancelled", "Capitalized") or (
-						asset.status == "Sold" and not self.is_return
-					):
-						frappe.throw(
-							_("Row #{0}: Asset {1} cannot be submitted, it is already {2}").format(
-								d.idx, d.asset, asset.status
+		for d in self.get("items"):
+			if d.is_fixed_asset:
+				if d.asset:
+					if not self.is_return:
+						asset_status = frappe.db.get_value("Asset", d.asset, "status")
+						if self.update_stock:
+							frappe.throw(_("'Update Stock' cannot be checked for fixed asset sale"))
+
+						elif asset_status in ("Scrapped", "Cancelled", "Capitalized"):
+							frappe.throw(
+								_("Row #{0}: Asset {1} cannot be sold, it is already {2}").format(
+									d.idx, d.asset, asset_status
+								)
 							)
+						elif asset_status == "Sold" and not self.is_return:
+							frappe.throw(_("Row #{0}: Asset {1} is already sold").format(d.idx, d.asset))
+					elif not self.return_against:
+						frappe.throw(
+							_("Row #{0}: Return Against is required for returning asset").format(d.idx)
 						)
+				else:
+					frappe.throw(
+						_("Row #{0}: You must select an Asset for Item {1}.").format(d.idx, d.item_code),
+						title=_("Missing Asset"),
+					)
 
 	def validate_item_cost_centers(self):
 		for item in self.items:
@@ -463,6 +476,8 @@ class SalesInvoice(SellingController):
 
 			self.update_stock_reservation_entries()
 			self.update_stock_ledger()
+
+		self.process_asset_depreciation()
 
 		# this sequence because outstanding may get -ve
 		self.make_gl_entries()
@@ -582,6 +597,8 @@ class SalesInvoice(SellingController):
 		# because updating reserved qty in bin depends upon updated delivered qty in SO
 		if self.update_stock == 1:
 			self.update_stock_ledger()
+
+		self.process_asset_depreciation()
 
 		self.make_gl_entries_on_cancel()
 
@@ -804,10 +821,10 @@ class SalesInvoice(SellingController):
 		self.paid_amount = paid_amount
 		self.base_paid_amount = base_paid_amount
 
+	@frappe.whitelist()
 	def set_account_for_mode_of_payment(self):
 		for payment in self.payments:
-			if not payment.account:
-				payment.account = get_bank_cash_account(payment.mode_of_payment, self.company).get("account")
+			payment.account = get_bank_cash_account(payment.mode_of_payment, self.company).get("account")
 
 	def validate_time_sheets_are_submitted(self):
 		for data in self.timesheets:
@@ -1253,6 +1270,90 @@ class SalesInvoice(SellingController):
 			):
 				throw(_("Delivery Note {0} is not submitted").format(d.delivery_note))
 
+	def process_asset_depreciation(self):
+		if (self.is_return and self.docstatus == 2) or (not self.is_return and self.docstatus == 1):
+			self.depreciate_asset_on_sale()
+		else:
+			self.restore_asset()
+
+		self.update_asset()
+
+	def depreciate_asset_on_sale(self):
+		"""
+		Depreciate asset on sale or cancellation of return sales invoice
+		"""
+		disposal_date = self.get_disposal_date()
+		for d in self.get("items"):
+			if d.asset:
+				asset = frappe.get_doc("Asset", d.asset)
+				if asset.calculate_depreciation and asset.status != "Fully Depreciated":
+					depreciate_asset(asset, disposal_date, self.get_note_for_asset_sale(asset))
+
+	def get_note_for_asset_sale(self, asset):
+		return _("This schedule was created when Asset {0} was {1} through Sales Invoice {2}.").format(
+			get_link_to_form(asset.doctype, asset.name),
+			_("returned") if self.is_return else _("sold"),
+			get_link_to_form(self.doctype, self.get("name")),
+		)
+
+	def restore_asset(self):
+		"""
+		Restore asset on return or cancellation of original sales invoice
+		"""
+
+		for d in self.get("items"):
+			if d.asset:
+				asset = frappe.get_cached_doc("Asset", d.asset)
+				if asset.calculate_depreciation:
+					reverse_depreciation_entry_made_on_disposal(asset)
+
+					note = self.get_note_for_asset_return(asset)
+					reset_depreciation_schedule(asset, note)
+
+	def get_note_for_asset_return(self, asset):
+		asset_link = get_link_to_form(asset.doctype, asset.name)
+		invoice_link = get_link_to_form(self.doctype, self.get("name"))
+		if self.is_return:
+			return _(
+				"This schedule was created when Asset {0} was returned through Sales Invoice {1}."
+			).format(asset_link, invoice_link)
+		else:
+			return _(
+				"This schedule was created when Asset {0} was restored due to Sales Invoice {1} cancellation."
+			).format(asset_link, invoice_link)
+
+	def update_asset(self):
+		"""
+		Update asset status, disposal date and asset activity on sale or return sales invoice
+		"""
+
+		def _update_asset(asset, disposal_date, note, asset_status=None):
+			frappe.db.set_value("Asset", d.asset, "disposal_date", disposal_date)
+			add_asset_activity(asset.name, note)
+			asset.set_status(asset_status)
+
+		disposal_date = self.get_disposal_date()
+		for d in self.get("items"):
+			if d.asset:
+				asset = frappe.get_cached_doc("Asset", d.asset)
+
+				if (self.is_return and self.docstatus == 1) or (not self.is_return and self.docstatus == 2):
+					note = _("Asset returned") if self.is_return else _("Asset sold")
+					asset_status, disposal_date = None, None
+				else:
+					note = _("Asset sold") if not self.is_return else _("Return invoice of asset cancelled")
+					asset_status = "Sold"
+
+				_update_asset(asset, disposal_date, note, asset_status)
+
+	def get_disposal_date(self):
+		if self.is_return:
+			disposal_date = frappe.db.get_value("Sales Invoice", self.return_against, "posting_date")
+		else:
+			disposal_date = self.posting_date
+
+		return disposal_date
+
 	def make_gl_entries(self, gl_entries=None, from_repost=False):
 		from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
 
@@ -1426,64 +1527,8 @@ class SalesInvoice(SellingController):
 				if self.is_internal_transfer():
 					continue
 
-				if item.is_fixed_asset:
-					asset = self.get_asset(item)
-
-					if self.is_return:
-						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
-							asset,
-							item.base_net_amount,
-							item.finance_book,
-							self.get("doctype"),
-							self.get("name"),
-							self.get("posting_date"),
-						)
-						asset.db_set("disposal_date", None)
-						add_asset_activity(asset.name, _("Asset returned"))
-
-						if asset.calculate_depreciation:
-							posting_date = frappe.db.get_value(
-								"Sales Invoice", self.return_against, "posting_date"
-							)
-							reverse_depreciation_entry_made_after_disposal(asset, posting_date)
-							notes = _(
-								"This schedule was created when Asset {0} was returned through Sales Invoice {1}."
-							).format(
-								get_link_to_form(asset.doctype, asset.name),
-								get_link_to_form(self.doctype, self.get("name")),
-							)
-							reset_depreciation_schedule(asset, self.posting_date, notes)
-							asset.reload()
-
-					else:
-						if asset.calculate_depreciation:
-							if not asset.status == "Fully Depreciated":
-								notes = _(
-									"This schedule was created when Asset {0} was sold through Sales Invoice {1}."
-								).format(
-									get_link_to_form(asset.doctype, asset.name),
-									get_link_to_form(self.doctype, self.get("name")),
-								)
-								depreciate_asset(asset, self.posting_date, notes)
-								asset.reload()
-
-						fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
-							asset,
-							item.base_net_amount,
-							item.finance_book,
-							self.get("doctype"),
-							self.get("name"),
-							self.get("posting_date"),
-						)
-						asset.db_set("disposal_date", self.posting_date)
-						add_asset_activity(asset.name, _("Asset sold"))
-
-					for gle in fixed_asset_gl_entries:
-						gle["against"] = self.customer
-						gl_entries.append(self.get_gl_dict(gle, item=item))
-
-					self.set_asset_status(asset)
-
+				if item.is_fixed_asset and item.asset:
+					self.get_gl_entries_for_fixed_asset(item, gl_entries)
 				else:
 					income_account = (
 						item.income_account
@@ -1518,17 +1563,31 @@ class SalesInvoice(SellingController):
 		if cint(self.update_stock) and erpnext.is_perpetual_inventory_enabled(self.company):
 			gl_entries += super().get_gl_entries()
 
-	def get_asset(self, item):
-		if item.get("asset"):
-			asset = frappe.get_doc("Asset", item.asset)
+	def get_gl_entries_for_fixed_asset(self, item, gl_entries):
+		asset = frappe.get_cached_doc("Asset", item.asset)
+
+		if self.is_return:
+			fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
+				asset,
+				item.base_net_amount,
+				item.finance_book,
+				self.get("doctype"),
+				self.get("name"),
+				self.get("posting_date"),
+			)
 		else:
-			frappe.throw(
-				_("Row #{0}: You must select an Asset for Item {1}.").format(item.idx, item.item_name),
-				title=_("Missing Asset"),
+			fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
+				asset,
+				item.base_net_amount,
+				item.finance_book,
+				self.get("doctype"),
+				self.get("name"),
+				self.get("posting_date"),
 			)
 
-		self.check_finance_books(item, asset)
-		return asset
+		for gle in fixed_asset_gl_entries:
+			gle["against"] = self.customer
+			gl_entries.append(self.get_gl_dict(gle, item=item))
 
 	@property
 	def enable_discount_accounting(self):
@@ -1538,12 +1597,6 @@ class SalesInvoice(SellingController):
 			)
 
 		return self._enable_discount_accounting
-
-	def set_asset_status(self, asset):
-		if self.is_return:
-			asset.set_status()
-		else:
-			asset.set_status("Sold" if self.docstatus == 1 else None)
 
 	def make_loyalty_point_redemption_gle(self, gl_entries):
 		if cint(self.redeem_loyalty_points and self.loyalty_points and not self.is_consolidated):
@@ -2359,6 +2412,18 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 		set_purchase_references(target)
 
 	def update_details(source_doc, target_doc, source_parent):
+		def _validate_address_link(address, link_doctype, link_name):
+			return frappe.db.get_value(
+				"Dynamic Link",
+				{
+					"parent": address,
+					"parenttype": "Address",
+					"link_doctype": link_doctype,
+					"link_name": link_name,
+				},
+				"parent",
+			)
+
 		target_doc.inter_company_invoice_reference = source_doc.name
 		if target_doc.doctype in ["Purchase Invoice", "Purchase Order"]:
 			currency = frappe.db.get_value("Supplier", details.get("party"), "default_currency")
@@ -2369,16 +2434,34 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 			target_doc.buying_price_list = source_doc.selling_price_list
 
 			# Invert Addresses
-			update_address(target_doc, "supplier_address", "address_display", source_doc.company_address)
-			update_address(
-				target_doc, "dispatch_address", "dispatch_address_display", source_doc.dispatch_address_name
-			)
-			update_address(
-				target_doc, "shipping_address", "shipping_address_display", source_doc.shipping_address_name
-			)
-			update_address(
-				target_doc, "billing_address", "billing_address_display", source_doc.customer_address
-			)
+			if source_doc.company_address and _validate_address_link(
+				source_doc.company_address, "Supplier", details.get("party")
+			):
+				update_address(target_doc, "supplier_address", "address_display", source_doc.company_address)
+			if source_doc.dispatch_address_name and _validate_address_link(
+				source_doc.dispatch_address_name, "Company", details.get("company")
+			):
+				update_address(
+					target_doc,
+					"dispatch_address",
+					"dispatch_address_display",
+					source_doc.dispatch_address_name,
+				)
+			if source_doc.shipping_address_name and _validate_address_link(
+				source_doc.shipping_address_name, "Company", details.get("company")
+			):
+				update_address(
+					target_doc,
+					"shipping_address",
+					"shipping_address_display",
+					source_doc.shipping_address_name,
+				)
+			if source_doc.customer_address and _validate_address_link(
+				source_doc.customer_address, "Company", details.get("company")
+			):
+				update_address(
+					target_doc, "billing_address", "billing_address_display", source_doc.customer_address
+				)
 
 			if currency:
 				target_doc.currency = currency
@@ -2399,13 +2482,22 @@ def make_inter_company_transaction(doctype, source_name, target_doc=None):
 			target_doc.customer = details.get("party")
 			target_doc.selling_price_list = source_doc.buying_price_list
 
-			update_address(
-				target_doc, "company_address", "company_address_display", source_doc.supplier_address
-			)
-			update_address(
-				target_doc, "shipping_address_name", "shipping_address", source_doc.shipping_address
-			)
-			update_address(target_doc, "customer_address", "address_display", source_doc.shipping_address)
+			if source_doc.supplier_address and _validate_address_link(
+				source_doc.supplier_address, "Company", details.get("company")
+			):
+				update_address(
+					target_doc, "company_address", "company_address_display", source_doc.supplier_address
+				)
+			if source_doc.shipping_address and _validate_address_link(
+				source_doc.shipping_address, "Customer", details.get("party")
+			):
+				update_address(
+					target_doc, "shipping_address_name", "shipping_address", source_doc.shipping_address
+				)
+			if source_doc.shipping_address and _validate_address_link(
+				source_doc.shipping_address, "Customer", details.get("party")
+			):
+				update_address(target_doc, "customer_address", "address_display", source_doc.shipping_address)
 
 			if currency:
 				target_doc.currency = currency

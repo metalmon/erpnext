@@ -847,8 +847,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		frappe.model.set_value(item.doctype, item.name, "stock_qty", valid_serial_nos.length);
 	}
 
-	validate() {
-		this.calculate_taxes_and_totals(false);
+	async validate() {
+		await this.calculate_taxes_and_totals(false);
 	}
 
 	update_stock() {
@@ -2778,4 +2778,20 @@ erpnext.apply_putaway_rule = (frm, purpose=null) => {
 			}
 		}
 	});
+};
+
+erpnext.set_unit_price_items_note = (frm) => {
+	if (frm.doc.has_unit_price_items && !frm.is_new()) {
+		// Remove existing note
+		const $note = $(frm.layout.wrapper.find(".unit-price-items-note"));
+		if ($note.length) { $note.parent().remove(); }
+
+		frm.layout.show_message(
+			`<div class="unit-price-items-note">
+				${__("The {0} contains Unit Price Items.", [__(frm.doc.doctype)])}
+			</div>`,
+			"yellow",
+			true
+		);
+	}
 };

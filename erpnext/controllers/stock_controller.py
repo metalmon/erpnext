@@ -895,7 +895,7 @@ class StockController(AccountsController):
 						or sl_dict.actual_qty < 0
 						and self.get("is_return")
 					)
-					and self.doctype in ["Purchase Invoice", "Purchase Receipt"]
+					and self.doctype in ["Purchase Invoice", "Purchase Receipt", "Stock Entry"]
 				) or (
 					(
 						sl_dict.actual_qty < 0
@@ -905,6 +905,15 @@ class StockController(AccountsController):
 					)
 					and self.doctype in ["Sales Invoice", "Delivery Note", "Stock Entry"]
 				):
+					if self.doctype == "Stock Entry":
+						if row.get("t_warehouse") == sl_dict.warehouse and sl_dict.get("actual_qty") > 0:
+							fieldname = f"to_{dimension.source_fieldname}"
+							if dimension.source_fieldname.startswith("to_"):
+								fieldname = f"{dimension.source_fieldname}"
+
+							sl_dict[dimension.target_fieldname] = row.get(fieldname)
+							return
+
 					sl_dict[dimension.target_fieldname] = row.get(dimension.source_fieldname)
 				else:
 					fieldname_start_with = "to"
@@ -1827,7 +1836,11 @@ def make_bundle_for_material_transfer(**kwargs):
 	bundle_doc.is_cancelled = 0
 
 	qty = 0
-	if len(bundle_doc.entries) == 1 and kwargs.qty < bundle_doc.total_qty and not bundle_doc.has_serial_no:
+	if (
+		len(bundle_doc.entries) == 1
+		and flt(kwargs.qty) < flt(bundle_doc.total_qty)
+		and not bundle_doc.has_serial_no
+	):
 		qty = kwargs.qty
 
 	for row in bundle_doc.entries:

@@ -13,11 +13,11 @@ from pypika import functions as fn
 import erpnext
 from erpnext.accounts.utils import get_account_currency
 from erpnext.assets.doctype.asset.asset import get_asset_account, is_cwip_accounting_enabled
-from erpnext.assets.doctype.asset_category.asset_category import get_asset_category_account
 from erpnext.buying.utils import check_on_hold_or_closed_status
 from erpnext.controllers.accounts_controller import merge_taxes
 from erpnext.controllers.buying_controller import BuyingController
 from erpnext.stock.doctype.delivery_note.delivery_note import make_inter_company_transaction
+from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import StockReservation
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
 
@@ -384,7 +384,7 @@ class PurchaseReceipt(BuyingController):
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 		self.set_consumed_qty_in_subcontract_order()
-		self.reserve_stock_for_sales_order()
+		self.reserve_stock()
 		self.update_received_qty_if_from_pp()
 
 	def update_received_qty_if_from_pp(self):
@@ -531,6 +531,12 @@ class PurchaseReceipt(BuyingController):
 				outgoing_amount = abs(get_stock_value_difference(self.name, item.name, item.from_warehouse))
 				credit_amount = outgoing_amount
 
+			if item.get("rejected_qty") and frappe.db.get_single_value(
+				"Buying Settings", "set_valuation_rate_for_rejected_materials"
+			):
+				outgoing_amount += get_stock_value_difference(self.name, item.name, item.rejected_warehouse)
+				credit_amount = outgoing_amount
+
 			if credit_amount:
 				if not account:
 					validate_account("Stock or Asset Received But Not Billed")
@@ -664,6 +670,12 @@ class PurchaseReceipt(BuyingController):
 				valuation_amount_as_per_doc - flt(stock_value_diff), item.precision("base_net_amount")
 			)
 
+			if item.get("rejected_qty") and frappe.db.get_single_value(
+				"Buying Settings", "set_valuation_rate_for_rejected_materials"
+			):
+				rejected_item_cost = get_stock_value_difference(self.name, item.name, item.rejected_warehouse)
+				divisional_loss -= rejected_item_cost
+
 			if divisional_loss:
 				loss_account = (
 					self.get_company_default("default_expense_account", ignore_validation=True)
@@ -751,12 +763,22 @@ class PurchaseReceipt(BuyingController):
 					make_sub_contracting_gl_entries(d)
 					make_divisional_loss_gl_entry(d, outgoing_amount)
 			elif (d.warehouse and d.warehouse not in warehouse_with_no_account) or (
-				d.rejected_warehouse and d.rejected_warehouse not in warehouse_with_no_account
+				not frappe.db.get_single_value("Buying Settings", "set_valuation_rate_for_rejected_materials")
+				and d.rejected_warehouse
+				and d.rejected_warehouse not in warehouse_with_no_account
 			):
 				warehouse_with_no_account.append(d.warehouse or d.rejected_warehouse)
 
 			if d.is_fixed_asset and d.landed_cost_voucher_amount:
 				self.update_assets(d, d.valuation_rate)
+
+			if d.rejected_qty and frappe.db.get_single_value(
+				"Buying Settings", "set_valuation_rate_for_rejected_materials"
+			):
+				stock_value_diff = get_stock_value_difference(self.name, d.name, d.rejected_warehouse)
+				stock_asset_account_name = warehouse_account[d.rejected_warehouse]["account"]
+
+				make_item_asset_inward_gl_entry(d, stock_value_diff, stock_asset_account_name)
 
 		if warehouse_with_no_account:
 			frappe.msgprint(
@@ -914,6 +936,10 @@ class PurchaseReceipt(BuyingController):
 			pr_doc = self if (pr == self.name) else frappe.get_doc("Purchase Receipt", pr)
 			update_billing_percentage(pr_doc, update_modified=update_modified)
 
+	def reserve_stock(self):
+		self.reserve_stock_for_sales_order()
+		self.reserve_stock_for_production_plan()
+
 	def reserve_stock_for_sales_order(self):
 		if (
 			self.is_return
@@ -953,6 +979,66 @@ class PurchaseReceipt(BuyingController):
 					from_voucher_type="Purchase Receipt",
 					notify=True,
 				)
+
+	def reserve_stock_for_production_plan(self):
+		if self.is_return or not frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"):
+			return
+
+		production_plan_references = self.get_production_plan_references()
+		production_plan_items = []
+
+		docnames = []
+		for row in self.items:
+			if row.material_request_item and row.material_request_item in production_plan_references:
+				_ref = production_plan_references[row.material_request_item]
+				docnames.append(_ref.production_plan)
+				row.update(
+					{
+						"voucher_type": "Production Plan",
+						"voucher_no": _ref.production_plan,
+						"voucher_detail_no": _ref.material_request_plan_item,
+						"from_voucher_no": self.name,
+						"from_voucher_detail_no": row.name,
+						"from_voucher_type": self.doctype,
+					}
+				)
+
+				production_plan_items.append(row)
+
+		if not production_plan_items:
+			return
+
+		sre = StockReservation(doc=self, items=production_plan_items)
+		sre.make_stock_reservation_entries()
+		if docnames:
+			sre.transfer_reservation_entries_to(
+				docnames, from_doctype="Production Plan", to_doctype="Work Order"
+			)
+
+	def get_production_plan_references(self):
+		production_plan_references = frappe._dict()
+		material_request_items = []
+
+		for row in self.items:
+			if row.material_request_item:
+				material_request_items.append(row.material_request_item)
+
+		if not material_request_items:
+			return frappe._dict()
+
+		items = frappe.get_all(
+			"Material Request Item",
+			fields=["material_request_plan_item", "production_plan", "name"],
+			filters={"name": ["in", material_request_items], "docstatus": 1},
+		)
+
+		for item in items:
+			if not item.production_plan:
+				continue
+
+			production_plan_references.setdefault(item.name, item)
+
+		return production_plan_references
 
 	def enable_recalculate_rate_in_sles(self):
 		rejected_warehouses = frappe.get_all(
@@ -1106,6 +1192,7 @@ def get_billed_amount_against_po(po_items):
 def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate=False):
 	# Update Billing % based on pending accepted qty
 	buying_settings = frappe.get_single("Buying Settings")
+	over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
 
 	total_amount, total_billed_amount = 0, 0
 	item_wise_returned_qty = get_item_wise_returned_qty(pr_doc)
@@ -1144,6 +1231,14 @@ def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate
 
 			adjusted_amt = flt(adjusted_amt * flt(pr_doc.conversion_rate), item.precision("amount"))
 			item.db_set("amount_difference_with_purchase_invoice", adjusted_amt, update_modified=False)
+		elif item.billed_amt > item.amount:
+			per_over_billed = (flt(item.billed_amt / item.amount, 2) * 100) - 100
+			if per_over_billed > over_billing_allowance:
+				frappe.throw(
+					_("Over Billing Allowance exceeded for Purchase Receipt Item {0} ({1}) by {2}%").format(
+						item.name, frappe.bold(item.item_code), per_over_billed - over_billing_allowance
+					)
+				)
 
 	percent_billed = round(100 * (total_billed_amount / (total_amount or 1)), 6)
 	pr_doc.db_set("per_billed", percent_billed)

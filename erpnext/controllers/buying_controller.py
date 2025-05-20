@@ -681,6 +681,10 @@ class BuyingController(SubcontractingController):
 						sl_entries.append(from_warehouse_sle)
 
 			if flt(d.rejected_qty) != 0:
+				valuation_rate_for_rejected_item = 0.0
+				if frappe.db.get_single_value("Buying Settings", "set_valuation_rate_for_rejected_materials"):
+					valuation_rate_for_rejected_item = d.valuation_rate
+
 				sl_entries.append(
 					self.get_sl_entries(
 						d,
@@ -689,7 +693,8 @@ class BuyingController(SubcontractingController):
 							"actual_qty": flt(
 								flt(d.rejected_qty) * flt(d.conversion_factor), d.precision("stock_qty")
 							),
-							"incoming_rate": 0.0,
+							"incoming_rate": valuation_rate_for_rejected_item if not self.is_return else 0.0,
+							"outgoing_rate": valuation_rate_for_rejected_item if self.is_return else 0.0,
 							"serial_and_batch_bundle": d.rejected_serial_and_batch_bundle,
 						},
 					)
@@ -775,22 +780,28 @@ class BuyingController(SubcontractingController):
 			self.update_fixed_asset(field, delete_asset=True)
 
 	def validate_budget(self):
-		if self.docstatus == 1:
-			for data in self.get("items"):
-				args = data.as_dict()
-				args.update(
-					{
-						"doctype": self.doctype,
-						"company": self.company,
-						"posting_date": (
-							self.schedule_date
-							if self.doctype == "Material Request"
-							else self.transaction_date
-						),
-					}
-				)
+		if frappe.db.get_single_value("Accounts Settings", "use_new_budget_controller"):
+			from erpnext.controllers.budget_controller import BudgetValidation
 
-				validate_expense_against_budget(args)
+			val = BudgetValidation(doc=self)
+			val.validate()
+		else:
+			if self.docstatus == 1:
+				for data in self.get("items"):
+					args = data.as_dict()
+					args.update(
+						{
+							"doctype": self.doctype,
+							"company": self.company,
+							"posting_date": (
+								self.schedule_date
+								if self.doctype == "Material Request"
+								else self.transaction_date
+							),
+						}
+					)
+
+					validate_expense_against_budget(args)
 
 	def process_fixed_asset(self):
 		if self.doctype == "Purchase Invoice" and not self.update_stock:

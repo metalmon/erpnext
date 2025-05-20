@@ -396,7 +396,6 @@ erpnext.patches.v15_0.update_cc_in_process_statement_of_accounts
 erpnext.patches.v15_0.refactor_closing_stock_balance #5
 erpnext.patches.v15_0.update_asset_status_to_work_in_progress
 erpnext.patches.v15_0.rename_manufacturing_settings_field
-erpnext.patches.v15_0.migrate_checkbox_to_select_for_reconciliation_effect
 erpnext.patches.v15_0.sync_auto_reconcile_config
 execute:frappe.db.set_single_value("Accounts Settings", "exchange_gain_loss_posting_date", "Payment")
 erpnext.patches.v14_0.disable_add_row_in_gross_profit
@@ -409,3 +408,9 @@ erpnext.patches.v15_0.update_query_report
 erpnext.patches.v15_0.set_purchase_receipt_row_item_to_capitalization_stock_item
 erpnext.patches.v15_0.update_payment_schedule_fields_in_invoices
 erpnext.patches.v15_0.reload_all_app_doctypes
+erpnext.patches.v15_0.rename_group_by_to_categorize_by
+execute:frappe.db.set_single_value("Accounts Settings", "receivable_payable_fetch_method", "Buffered Cursor")
+erpnext.patches.v14_0.set_update_price_list_based_on
+erpnext.patches.v15_0.update_journal_entry_type
+erpnext.patches.v15_0.set_grand_total_to_default_mop
+execute:frappe.db.set_single_value("Accounts Settings", "use_new_budget_controller", True)
