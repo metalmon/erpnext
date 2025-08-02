@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Enterprise VERSION\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
-"POT-Creation-Date: 2025-08-02 08:58+0000\n"
-"PO-Revision-Date: 2025-08-02 08:58+0000\n"
+"POT-Creation-Date: 2025-08-02 09:56+0000\n"
+"PO-Revision-Date: 2025-08-02 09:56+0000\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: hello@frappe.io\n"
 "MIME-Version: 1.0\n"
@@ -18581,6 +18581,10 @@ msgstr ""
 msgid "EMU of current"
 msgstr ""
 
+#: erpnext/hooks.py:5
+msgid "ERP made simple"
+msgstr ""
+
 #. Label of the user_id (Data) field in DocType 'Employee Group Table'
 #: erpnext/setup/doctype/employee_group_table/employee_group_table.json
 msgid "ERPNext User ID"
@@ -19507,6 +19511,10 @@ msgstr ""
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:535
 msgid "Enter {0} amount."
+msgstr ""
+
+#: erpnext/hooks.py:3
+msgid "Enterprise"
 msgstr ""
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:22
@@ -21397,6 +21405,10 @@ msgstr ""
 #. Label of the forum_url (Data) field in DocType 'Support Settings'
 #: erpnext/support/doctype/support_settings/support_settings.json
 msgid "Forum URL"
+msgstr ""
+
+#: erpnext/hooks.py:4
+msgid "Frappe Technologies Pvt. Ltd."
 msgstr ""
 
 #. Title of an incoterm

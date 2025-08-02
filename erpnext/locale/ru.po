@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERPNext VERSION\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
-"POT-Creation-Date: 2025-08-02 08:58+0000\n"
-"PO-Revision-Date: 2025-08-02 13:29+0400\n"
+"POT-Creation-Date: 2025-08-02 09:56+0000\n"
+"PO-Revision-Date: 2025-08-02 13:56+0400\n"
 "Last-Translator: AlexKuzin <dev@olimpicfresh.ru>\n"
 "Language-Team: info@erpnext.com\n"
 "Language: ru\n"
@@ -18483,6 +18483,10 @@ msgstr "Единица измерения заряда"
 msgid "EMU of current"
 msgstr "Единица измерения текущего"
 
+#: erpnext/hooks.py:5
+msgid "ERP made simple"
+msgstr "ERP - это просто"
+
 #. Label of the user_id (Data) field in DocType 'Employee Group Table'
 #: erpnext/setup/doctype/employee_group_table/employee_group_table.json
 msgid "ERPNext User ID"
@@ -19412,6 +19416,10 @@ msgstr "Введите количество для производства.  С
 #: erpnext/selling/page/point_of_sale/pos_payment.js:535
 msgid "Enter {0} amount."
 msgstr "Введите сумму {0}."
+
+#: erpnext/hooks.py:3
+msgid "Enterprise"
+msgstr "Предприятие"
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:22
 msgid "Entertainment & Leisure"
@@ -21301,6 +21309,10 @@ msgstr "Сообщения форума"
 #: erpnext/support/doctype/support_settings/support_settings.json
 msgid "Forum URL"
 msgstr "URL форума"
+
+#: erpnext/hooks.py:4
+msgid "Frappe Technologies Pvt. Ltd."
+msgstr "Frappe Technologies Pvt. Ltd."
 
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:4
