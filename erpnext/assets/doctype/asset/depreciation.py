@@ -35,9 +35,7 @@ from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_sched
 
 def post_depreciation_entries(date=None):
 	# Return if automatic booking of asset depreciation is disabled
-	if not cint(
-		frappe.db.get_single_value("Accounts Settings", "book_asset_depreciation_entry_automatically")
-	):
+	if not cint(frappe.get_single_value("Accounts Settings", "book_asset_depreciation_entry_automatically")):
 		return
 
 	date = date or today()
@@ -114,12 +112,12 @@ def make_depreciation_entry_on_disposal(asset_doc, disposal_date=None):
 
 
 def get_acc_frozen_upto():
-	acc_frozen_upto = frappe.db.get_single_value("Accounts Settings", "acc_frozen_upto")
+	acc_frozen_upto = frappe.get_single_value("Accounts Settings", "acc_frozen_upto")
 
 	if not acc_frozen_upto:
 		return
 
-	frozen_accounts_modifier = frappe.db.get_single_value("Accounts Settings", "frozen_accounts_modifier")
+	frozen_accounts_modifier = frappe.get_single_value("Accounts Settings", "frozen_accounts_modifier")
 
 	if frozen_accounts_modifier not in frappe.get_roles() or frappe.session.user == "Administrator":
 		return getdate(acc_frozen_upto)
@@ -799,7 +797,7 @@ def get_value_after_depreciation_on_disposal_date(asset, disposal_date, finance_
 
 	idx = 1
 	if finance_book:
-		for d in asset.finance_books:
+		for d in asset_doc.finance_books:
 			if d.finance_book == finance_book:
 				idx = d.idx
 				break

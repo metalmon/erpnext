@@ -778,7 +778,14 @@ class ProductionPlan(Document):
 				"company": self.get("company"),
 			}
 
+			if flt(row.qty) <= flt(row.ordered_qty):
+				continue
+
 			self.prepare_data_for_sub_assembly_items(row, work_order_data)
+
+			if work_order_data.get("qty") <= 0:
+				continue
+
 			work_order = self.create_work_order(work_order_data)
 			if work_order:
 				wo_list.append(work_order)
@@ -797,6 +804,8 @@ class ProductionPlan(Document):
 		]:
 			if row.get(field):
 				wo_data[field] = row.get(field)
+
+		wo_data["qty"] = flt(row.get("qty")) - flt(row.get("ordered_qty"))
 
 		wo_data.update(
 			{
@@ -875,6 +884,9 @@ class ProductionPlan(Document):
 
 		wo = frappe.new_doc("Work Order")
 		wo.update(item)
+		if not wo.source_warehouse:
+			wo.source_warehouse = item.get("fg_warehouse")
+
 		wo.reserve_stock = self.reserve_stock
 		wo.planned_start_date = item.get("planned_start_date") or item.get("schedule_date")
 
@@ -882,11 +894,12 @@ class ProductionPlan(Document):
 			wo.fg_warehouse = item.get("warehouse")
 
 		wo.set_work_order_operations()
-		wo.set_required_items()
+		wo.set_required_items(reset_source_warehouse=True)
 
 		try:
 			wo.flags.ignore_mandatory = True
 			wo.flags.ignore_validate = True
+			wo.company = self.company
 			wo.insert()
 			return wo.name
 		except OverProductionError:
@@ -1236,6 +1249,7 @@ def get_exploded_items(item_details, company, bom_no, include_non_stock_items, p
 			item.purchase_uom,
 			item_uom.conversion_factor,
 			item.safety_stock,
+			bom.item.as_("main_bom_item"),
 		)
 		.where(
 			(bei.docstatus < 2)
@@ -1303,6 +1317,7 @@ def get_subitems(
 			item_default.default_warehouse,
 			item.purchase_uom,
 			item_uom.conversion_factor,
+			bom.item.as_("main_bom_item"),
 		)
 		.where(
 			(bom.name == bom_no)
@@ -1415,6 +1430,7 @@ def get_material_request_items(
 		"sales_order": sales_order,
 		"description": row.get("description"),
 		"uom": row.get("purchase_uom") or row.get("stock_uom"),
+		"main_bom_item": row.get("main_bom_item"),
 	}
 
 
@@ -1824,13 +1840,14 @@ def get_sub_assembly_items(
 				bin_details.setdefault(d.item_code, get_bin_details(d, company, for_warehouse=warehouse))
 
 				for _bin_dict in bin_details[d.item_code]:
-					if _bin_dict.projected_qty > 0:
-						if _bin_dict.projected_qty >= stock_qty:
-							_bin_dict.projected_qty -= stock_qty
+					_bin_dict.original_projected_qty = _bin_dict.projected_qty
+					if _bin_dict.original_projected_qty > 0:
+						if _bin_dict.original_projected_qty >= stock_qty:
+							_bin_dict.original_projected_qty -= stock_qty
 							stock_qty = 0
 							continue
 						else:
-							stock_qty = stock_qty - _bin_dict.projected_qty
+							stock_qty = stock_qty - _bin_dict.original_projected_qty
 							sub_assembly_items.append(d.item_code)
 			elif warehouse:
 				bin_details.setdefault(d.item_code, get_bin_details(d, company, for_warehouse=warehouse))
@@ -1982,6 +1999,7 @@ def get_raw_materials_of_sub_assembly_items(
 			item.purchase_uom,
 			item_uom.conversion_factor,
 			item.safety_stock,
+			bom.item.as_("main_bom_item"),
 		)
 		.where(
 			(bei.docstatus == 1)

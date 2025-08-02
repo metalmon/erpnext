@@ -57,6 +57,7 @@ class AssetRepair(AccountsController):
 
 	def validate(self):
 		self.asset_doc = frappe.get_doc("Asset", self.asset)
+		self.validate_asset()
 		self.validate_dates()
 		self.validate_purchase_invoices()
 		self.update_status()
@@ -65,8 +66,16 @@ class AssetRepair(AccountsController):
 		self.calculate_total_repair_cost()
 		self.check_repair_status()
 
+	def validate_asset(self):
+		if self.asset_doc.status in ("Sold", "Fully Depreciated", "Scrapped"):
+			frappe.throw(
+				_("Asset {0} is in {1} status and cannot be repaired.").format(
+					get_link_to_form("Asset", self.asset), self.asset_doc.status
+				)
+			)
+
 	def validate_dates(self):
-		if self.completion_date and (self.failure_date > self.completion_date):
+		if self.completion_date and (getdate(self.failure_date) > getdate(self.completion_date)):
 			frappe.throw(
 				_("Completion Date can not be before Failure Date. Please adjust the dates accordingly.")
 			)
@@ -156,6 +165,13 @@ class AssetRepair(AccountsController):
 
 			self.make_gl_entries()
 
+	def cancel_sabb(self):
+		for row in self.stock_items:
+			if sabb := row.serial_and_batch_bundle:
+				row.db_set("serial_and_batch_bundle", None)
+				doc = frappe.get_doc("Serial and Batch Bundle", sabb)
+				doc.cancel()
+
 	def on_cancel(self):
 		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		if self.get("capitalize_repair_cost"):
@@ -166,6 +182,8 @@ class AssetRepair(AccountsController):
 			depreciation_note = self.get_depreciation_note()
 			reschedule_depreciation(self.asset_doc, depreciation_note)
 			self.add_asset_activity()
+
+		self.cancel_sabb()
 
 	def after_delete(self):
 		frappe.get_doc("Asset", self.asset).set_status()
@@ -274,7 +292,7 @@ class AssetRepair(AccountsController):
 						"voucher_type": self.doctype,
 						"voucher_no": self.name,
 						"cost_center": self.cost_center,
-						"posting_date": getdate(),
+						"posting_date": self.completion_date,
 						"company": self.company,
 					},
 					item=self,
@@ -291,7 +309,7 @@ class AssetRepair(AccountsController):
 					"voucher_type": self.doctype,
 					"voucher_no": self.name,
 					"cost_center": self.cost_center,
-					"posting_date": getdate(),
+					"posting_date": self.completion_date,
 					"against_voucher_type": "Purchase Invoice",
 					"company": self.company,
 				},
@@ -326,7 +344,7 @@ class AssetRepair(AccountsController):
 							"voucher_type": self.doctype,
 							"voucher_no": self.name,
 							"cost_center": self.cost_center,
-							"posting_date": getdate(),
+							"posting_date": self.completion_date,
 							"company": self.company,
 						},
 						item=self,
@@ -343,7 +361,7 @@ class AssetRepair(AccountsController):
 							"voucher_type": self.doctype,
 							"voucher_no": self.name,
 							"cost_center": self.cost_center,
-							"posting_date": getdate(),
+							"posting_date": self.completion_date,
 							"against_voucher_type": "Stock Entry",
 							"against_voucher": stock_entry.name,
 							"company": self.company,

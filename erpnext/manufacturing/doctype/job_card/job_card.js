@@ -23,12 +23,32 @@ frappe.ui.form.on("Job Card", {
 			};
 		});
 
+		frm.events.set_company_filters(frm, "source_warehouse");
+		frm.events.set_company_filters(frm, "wip_warehouse");
+		frm.set_query("source_warehouse", "items", () => {
+			return {
+				filters: {
+					company: frm.doc.company,
+				},
+			};
+		});
+
 		frm.set_indicator_formatter("sub_operation", function (doc) {
 			if (doc.status == "Pending") {
 				return "red";
 			} else {
 				return doc.status === "Complete" ? "green" : "orange";
 			}
+		});
+	},
+
+	set_company_filters(frm, fieldname) {
+		frm.set_query(fieldname, () => {
+			return {
+				filters: {
+					company: frm.doc.company,
+				},
+			};
 		});
 	},
 
@@ -45,26 +65,38 @@ frappe.ui.form.on("Job Card", {
 
 	setup_stock_entry(frm) {
 		if (
-			frm.doc.manufactured_qty &&
-			frm.doc.finished_good &&
+			frm.doc.track_semi_finished_goods &&
 			frm.doc.docstatus === 1 &&
 			!frm.doc.is_subcontracted &&
+			(frm.doc.skip_material_transfer || frm.doc.transferred_qty > 0) &&
 			flt(frm.doc.for_quantity) + flt(frm.doc.process_loss_qty) > flt(frm.doc.manufactured_qty)
 		) {
 			frm.add_custom_button(__("Make Stock Entry"), () => {
-				frm.call({
-					method: "make_stock_entry_for_semi_fg_item",
-					args: {
-						auto_submit: 1,
+				frappe.confirm(
+					__("Do you want to submit the stock entry?"),
+					() => {
+						frm.events.make_manufacture_stock_entry(frm, 1);
 					},
-					doc: frm.doc,
-					freeze: true,
-					callback() {
-						frm.reload_doc();
-					},
-				});
+					() => {
+						frm.events.make_manufacture_stock_entry(frm, 0);
+					}
+				);
 			}).addClass("btn-primary");
 		}
+	},
+
+	make_manufacture_stock_entry(frm, submit_entry) {
+		frm.call({
+			method: "make_stock_entry_for_semi_fg_item",
+			args: {
+				auto_submit: submit_entry,
+			},
+			doc: frm.doc,
+			freeze: true,
+			callback() {
+				frm.reload_doc();
+			},
+		});
 	},
 
 	refresh: function (frm) {
@@ -97,9 +129,13 @@ frappe.ui.form.on("Job Card", {
 			let excess_transfer_allowed = frm.doc.__onload.job_card_excess_transfer;
 
 			if (has_items && (to_request || excess_transfer_allowed)) {
-				frm.add_custom_button(__("Material Request"), () => {
-					frm.trigger("make_material_request");
-				});
+				frm.add_custom_button(
+					__("Material Request"),
+					() => {
+						frm.trigger("make_material_request");
+					},
+					__("Create")
+				);
 			}
 
 			// check if any row has untransferred materials
@@ -107,9 +143,13 @@ frappe.ui.form.on("Job Card", {
 			let to_transfer = frm.doc.items.some((row) => row.transferred_qty < row.required_qty);
 
 			if (has_items && (to_transfer || excess_transfer_allowed)) {
-				frm.add_custom_button(__("Material Transfer"), () => {
-					frm.trigger("make_stock_entry");
-				});
+				frm.add_custom_button(
+					__("Material Transfer"),
+					() => {
+						frm.trigger("make_stock_entry");
+					},
+					__("Create")
+				);
 			}
 		}
 
@@ -252,7 +292,6 @@ frappe.ui.form.on("Job Card", {
 				fieldtype: "Float",
 				label: __("Process Loss Quantity"),
 				fieldname: "process_loss_qty",
-				reqd: 1,
 				onchange() {
 					let doc = frm.job_completion_dialog;
 

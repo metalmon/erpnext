@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 import frappe
 from frappe import _, qb, query_builder, scrub
+from frappe.database.schema import get_definition
 from frappe.query_builder import Criterion
 from frappe.query_builder.functions import Date, Substring, Sum
 from frappe.utils import cint, cstr, flt, getdate, nowdate
@@ -14,7 +15,12 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
 	get_dimension_with_children,
 )
-from erpnext.accounts.utils import get_currency_precision, get_party_types_from_account_type
+from erpnext.accounts.utils import (
+	build_qb_match_conditions,
+	get_advance_payment_doctypes,
+	get_currency_precision,
+	get_party_types_from_account_type,
+)
 
 #  This report gives a summary of all Outstanding Invoices considering the following
 
@@ -48,7 +54,8 @@ class ReceivablePayableReport:
 		self.filters.report_date = getdate(self.filters.report_date or nowdate())
 		self.age_as_on = (
 			getdate(nowdate())
-			if self.filters.calculate_ageing_with == "Today Date"
+			if "calculate_ageing_with" not in self.filters
+			or self.filters.calculate_ageing_with == "Today Date"
 			else self.filters.report_date
 		)
 
@@ -57,9 +64,12 @@ class ReceivablePayableReport:
 		self.ranges = [num.strip() for num in self.filters.range.split(",") if num.strip().isdigit()]
 		self.range_numbers = [num for num in range(1, len(self.ranges) + 2)]
 		self.ple_fetch_method = (
-			frappe.db.get_single_value("Accounts Settings", "receivable_payable_fetch_method")
+			frappe.get_single_value("Accounts Settings", "receivable_payable_fetch_method")
 			or "Buffered Cursor"
 		)  # Fail Safe
+		self.advance_payment_doctypes = frappe.get_hooks(
+			"advance_payment_receivable_doctypes"
+		) + frappe.get_hooks("advance_payment_payable_doctypes")
 
 	def run(self, args):
 		self.filters.update(args)
@@ -83,6 +93,7 @@ class ReceivablePayableReport:
 		self.party_details = {}
 		self.invoices = set()
 		self.skip_total_row = 0
+		self.advance_payment_doctypes = get_advance_payment_doctypes()
 
 		if self.filters.get("group_by_party"):
 			self.previous_party = ""
@@ -98,9 +109,6 @@ class ReceivablePayableReport:
 	def get_data(self):
 		self.get_sales_invoices_or_customers_based_on_sales_person()
 
-		# Build delivery note map against all sales invoices
-		self.build_delivery_note_map()
-
 		# Get invoice details like bill_no, due_date etc for all invoices
 		self.get_invoice_details()
 
@@ -108,7 +116,8 @@ class ReceivablePayableReport:
 		self.get_future_payments()
 
 		# Get return entries
-		self.get_return_entries()
+		if not self.filters.party_type or self.filters.party_type in ["Customer", "Supplier"]:
+			self.get_return_entries()
 
 		# Get Exchange Rate Revaluations
 		self.get_exchange_rate_revaluations()
@@ -121,11 +130,16 @@ class ReceivablePayableReport:
 			self.fetch_ple_in_buffered_cursor()
 		elif self.ple_fetch_method == "UnBuffered Cursor":
 			self.fetch_ple_in_unbuffered_cursor()
+		elif self.ple_fetch_method == "Raw SQL":
+			self.fetch_ple_in_sql_procedures()
+
+		# Build delivery note map against all sales invoices
+		self.build_delivery_note_map()
 
 		self.build_data()
 
 	def fetch_ple_in_buffered_cursor(self):
-		self.ple_entries = frappe.db.sql(self.ple_query.get_sql(), as_dict=True)
+		self.ple_entries = self.ple_query.run(as_dict=True)
 
 		for ple in self.ple_entries:
 			self.init_voucher_balance(ple)  # invoiced, paid, credit_note, outstanding
@@ -139,7 +153,7 @@ class ReceivablePayableReport:
 	def fetch_ple_in_unbuffered_cursor(self):
 		self.ple_entries = []
 		with frappe.db.unbuffered_cursor():
-			for ple in frappe.db.sql(self.ple_query.get_sql(), as_dict=True, as_iterator=True):
+			for ple in self.ple_query.run(as_dict=True, as_iterator=True):
 				self.init_voucher_balance(ple)  # invoiced, paid, credit_note, outstanding
 				self.ple_entries.append(ple)
 
@@ -176,7 +190,10 @@ class ReceivablePayableReport:
 		if key not in self.voucher_balance:
 			self.voucher_balance[key] = self.build_voucher_dict(ple)
 
-		if ple.voucher_type == ple.against_voucher_type and ple.voucher_no == ple.against_voucher_no:
+		if (ple.voucher_type == ple.against_voucher_type and ple.voucher_no == ple.against_voucher_no) or (
+			ple.voucher_type in ("Payment Entry", "Journal Entry")
+			and ple.against_voucher_type in self.advance_payment_doctypes
+		):
 			self.voucher_balance[key].cost_center = ple.cost_center
 
 		self.get_invoices(ple)
@@ -303,6 +320,79 @@ class ReceivablePayableReport:
 			else:
 				row.paid -= amount
 				row.paid_in_account_currency -= amount_in_account_currency
+
+	def fetch_ple_in_sql_procedures(self):
+		self.proc = InitSQLProceduresForAR()
+
+		build_balance = f"""
+		begin not atomic
+		declare done boolean default false;
+		declare rec1 row type of `{self.proc._row_def_table_name}`;
+		declare ple cursor for {self.ple_query.get_sql()};
+		declare continue handler for not found set done = true;
+
+		open ple;
+		fetch ple into rec1;
+		while not done do
+			call {self.proc.init_procedure_name}(rec1);
+			fetch ple into rec1;
+		end while;
+		close ple;
+
+		set done = false;
+		open ple;
+		fetch ple into rec1;
+		while not done do
+			call {self.proc.allocate_procedure_name}(rec1);
+			fetch ple into rec1;
+		end while;
+		close ple;
+		end;
+		"""
+		frappe.db.sql(build_balance)
+
+		balances = frappe.db.sql(
+			f"""select
+			name,
+			voucher_type,
+			voucher_no,
+			party,
+			party_account `account`,
+			posting_date,
+			account_currency,
+			cost_center,
+			sum(invoiced) `invoiced`,
+			sum(paid) `paid`,
+			sum(credit_note) `credit_note`,
+			sum(invoiced) - sum(paid) - sum(credit_note) `outstanding`,
+			sum(invoiced_in_account_currency) `invoiced_in_account_currency`,
+			sum(paid_in_account_currency) `paid_in_account_currency`,
+			sum(credit_note_in_account_currency) `credit_note_in_account_currency`,
+			sum(invoiced_in_account_currency) - sum(paid_in_account_currency) - sum(credit_note_in_account_currency) `outstanding_in_account_currency`
+			from `{self.proc._voucher_balance_name}` group by name order by posting_date;""",
+			as_dict=True,
+		)
+		for x in balances:
+			if self.filters.get("ignore_accounts"):
+				key = (x.voucher_type, x.voucher_no, x.party)
+			else:
+				key = (x.account, x.voucher_type, x.voucher_no, x.party)
+
+			_d = self.build_voucher_dict(x)
+			for field in [
+				"invoiced",
+				"paid",
+				"credit_note",
+				"outstanding",
+				"invoiced_in_account_currency",
+				"paid_in_account_currency",
+				"credit_note_in_account_currency",
+				"outstanding_in_account_currency",
+				"cost_center",
+			]:
+				_d[field] = x.get(field)
+
+			self.voucher_balance[key] = _d
 
 	def update_sub_total_row(self, row, party):
 		total_row = self.total_row_map.get(party)
@@ -446,16 +536,14 @@ class ReceivablePayableReport:
 		self.invoice_details = frappe._dict()
 		if self.account_type == "Receivable":
 			# nosemgrep
-			si_list = frappe.db.sql(
-				"""
-				select name, due_date, po_no
-				from `tabSales Invoice`
-				where posting_date <= %s
-					and company = %s
-					and docstatus = 1
-			""",
-				(self.filters.report_date, self.filters.company),
-				as_dict=1,
+			si_list = frappe.get_list(
+				"Sales Invoice",
+				filters={
+					"posting_date": ("<=", self.filters.report_date),
+					"company": self.filters.company,
+					"docstatus": 1,
+				},
+				fields=["name", "due_date", "po_no"],
 			)
 			for d in si_list:
 				self.invoice_details.setdefault(d.name, d)
@@ -478,33 +566,29 @@ class ReceivablePayableReport:
 
 		if self.account_type == "Payable":
 			# nosemgrep
-			for pi in frappe.db.sql(
-				"""
-				select name, due_date, bill_no, bill_date
-				from `tabPurchase Invoice`
-				where
-					posting_date <= %s
-					and company = %s
-					and docstatus = 1
-			""",
-				(self.filters.report_date, self.filters.company),
-				as_dict=1,
-			):
+			invoices = frappe.get_list(
+				"Purchase Invoice",
+				filters={
+					"posting_date": ("<=", self.filters.report_date),
+					"company": self.filters.company,
+					"docstatus": 1,
+				},
+				fields=["name", "due_date", "bill_no", "bill_date"],
+			)
+
+			for pi in invoices:
 				self.invoice_details.setdefault(pi.name, pi)
 
 		# Invoices booked via Journal Entries
 		# nosemgrep
-		journal_entries = frappe.db.sql(
-			"""
-			select name, due_date, bill_no, bill_date
-			from `tabJournal Entry`
-			where
-				posting_date <= %s
-				and company = %s
-				and docstatus = 1
-		""",
-			(self.filters.report_date, self.filters.company),
-			as_dict=1,
+		journal_entries = frappe.get_list(
+			"Journal Entry",
+			filters={
+				"posting_date": ("<=", self.filters.report_date),
+				"company": self.filters.company,
+				"docstatus": 1,
+			},
+			fields=["name", "due_date", "bill_no", "bill_date"],
 		)
 
 		for je in journal_entries:
@@ -846,12 +930,15 @@ class ReceivablePayableReport:
 		)
 
 		if self.filters.get("show_remarks"):
-			if remarks_length := frappe.db.get_single_value(
+			if remarks_length := frappe.get_single_value(
 				"Accounts Settings", "receivable_payable_remarks_length"
 			):
 				query = query.select(Substring(ple.remarks, 1, remarks_length).as_("remarks"))
 			else:
 				query = query.select(ple.remarks)
+
+		if match_conditions := build_qb_match_conditions("Payment Ledger Entry"):
+			query = query.where(Criterion.all(match_conditions))
 
 		if self.filters.get("group_by_party"):
 			query = query.orderby(self.ple.party, self.ple.posting_date)
@@ -1239,3 +1326,134 @@ def get_customer_group_with_children(customer_groups):
 			frappe.throw(_("Customer Group: {0} does not exist").format(d))
 
 	return list(set(all_customer_groups))
+
+
+class InitSQLProceduresForAR:
+	"""
+	Initialize SQL Procedures, Functions and Temporary tables to build Receivable / Payable report
+	"""
+
+	_varchar_type = get_definition("Data")
+	_currency_type = get_definition("Currency")
+	# Temporary Tables
+	_voucher_balance_name = "_ar_voucher_balance"
+	_voucher_balance_definition = f"""
+		create temporary table `{_voucher_balance_name}`(
+		name {_varchar_type},
+		voucher_type {_varchar_type},
+		voucher_no {_varchar_type},
+		party {_varchar_type},
+		party_account {_varchar_type},
+		posting_date date,
+		account_currency {_varchar_type},
+		cost_center {_varchar_type},
+		invoiced {_currency_type},
+		paid {_currency_type},
+		credit_note {_currency_type},
+		invoiced_in_account_currency {_currency_type},
+		paid_in_account_currency {_currency_type},
+		credit_note_in_account_currency {_currency_type}) engine=memory;
+	"""
+
+	_row_def_table_name = "_ar_ple_row"
+	_row_def_table_definition = f"""
+		create temporary table `{_row_def_table_name}`(
+		name {_varchar_type},
+		account {_varchar_type},
+		voucher_type {_varchar_type},
+		voucher_no {_varchar_type},
+		against_voucher_type {_varchar_type},
+		against_voucher_no {_varchar_type},
+		party_type {_varchar_type},
+		cost_center {_varchar_type},
+		party {_varchar_type},
+		posting_date date,
+		due_date date,
+		account_currency {_varchar_type},
+		amount {_currency_type},
+		amount_in_account_currency {_currency_type}) engine=memory;
+	"""
+
+	# Function
+	genkey_function_name = "ar_genkey"
+	genkey_function_sql = f"""
+	create function `{genkey_function_name}`(rec row type of `{_row_def_table_name}`, allocate bool) returns char(40)
+	begin
+		if allocate then
+			return sha1(concat_ws(',', rec.account, rec.against_voucher_type, rec.against_voucher_no, rec.party));
+		else
+			return sha1(concat_ws(',', rec.account, rec.voucher_type, rec.voucher_no, rec.party));
+		end if;
+	end
+	"""
+
+	# Procedures
+	init_procedure_name = "ar_init_tmp_table"
+	init_procedure_sql = f"""
+	create procedure ar_init_tmp_table(in ple row type of `{_row_def_table_name}`)
+	begin
+		if not exists (select name from `{_voucher_balance_name}` where name = `{genkey_function_name}`(ple, false))
+		then
+			insert into `{_voucher_balance_name}` values (`{genkey_function_name}`(ple, false), ple.voucher_type, ple.voucher_no, ple.party, ple.account, ple.posting_date, ple.account_currency, ple.cost_center, 0, 0, 0, 0, 0, 0);
+		end if;
+	end;
+	"""
+
+	allocate_procedure_name = "ar_allocate_to_tmp_table"
+	allocate_procedure_sql = f"""
+	create procedure ar_allocate_to_tmp_table(in ple row type of `{_row_def_table_name}`)
+	begin
+		declare invoiced {_currency_type} default 0;
+		declare invoiced_in_account_currency {_currency_type} default 0;
+		declare paid {_currency_type} default 0;
+		declare paid_in_account_currency {_currency_type} default 0;
+		declare credit_note {_currency_type} default 0;
+		declare credit_note_in_account_currency {_currency_type} default 0;
+
+
+		if ple.amount > 0 then
+			if (ple.voucher_type in ("Journal Entry", "Payment Entry") and (ple.voucher_no != ple.against_voucher_no)) then
+				set paid = -1 * ple.amount;
+				set paid_in_account_currency = -1 * ple.amount_in_account_currency;
+			else
+				set invoiced = ple.amount;
+				set invoiced_in_account_currency = ple.amount_in_account_currency;
+			end if;
+		else
+
+		if ple.voucher_type in ("Sales Invoice", "Purchase Invoice") then
+			if (ple.voucher_no = ple.against_voucher_no) then
+				set paid = -1 * ple.amount;
+				set paid_in_account_currency = -1 * ple.amount_in_account_currency;
+			else
+				set credit_note = -1 * ple.amount;
+				set credit_note_in_account_currency = -1 * ple.amount_in_account_currency;
+		end if;
+		else
+			set paid = -1 * ple.amount;
+			set paid_in_account_currency = -1 * ple.amount_in_account_currency;
+		end if;
+
+		end if;
+
+		insert into `{_voucher_balance_name}` values (`{genkey_function_name}`(ple, true), ple.against_voucher_type, ple.against_voucher_no, ple.party, ple.account, ple.posting_date, ple.account_currency,'', invoiced, paid, 0, invoiced_in_account_currency, paid_in_account_currency, 0);
+	end;
+	"""
+
+	def __init__(self):
+		existing_procedures = frappe.db.get_routines()
+
+		if self.genkey_function_name not in existing_procedures:
+			frappe.db.sql(self.genkey_function_sql)
+
+		if self.init_procedure_name not in existing_procedures:
+			frappe.db.sql(self.init_procedure_sql)
+
+		if self.allocate_procedure_name not in existing_procedures:
+			frappe.db.sql(self.allocate_procedure_sql)
+
+		frappe.db.sql(f"drop table if exists `{self._voucher_balance_name}`")
+		frappe.db.sql(self._voucher_balance_definition)
+
+		frappe.db.sql(f"drop table if exists `{self._row_def_table_name}`")
+		frappe.db.sql(self._row_def_table_definition)

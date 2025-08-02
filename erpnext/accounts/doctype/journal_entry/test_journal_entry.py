@@ -2,21 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 import frappe
-from frappe.tests import IntegrationTestCase, UnitTestCase
+from frappe.tests import IntegrationTestCase
 from frappe.utils import flt, nowdate
 
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
 from erpnext.accounts.doctype.journal_entry.journal_entry import StockAccountInvalidTransaction
 from erpnext.exceptions import InvalidAccountCurrency
-
-
-class UnitTestJournalEntry(UnitTestCase):
-	"""
-	Unit tests for JournalEntry.
-	Use this class for testing individual functions and methods.
-	"""
-
-	pass
 
 
 class TestJournalEntry(IntegrationTestCase):
@@ -587,6 +578,18 @@ class TestJournalEntry(IntegrationTestCase):
 			{"account": "_Test Receivable USD - _TC", "transaction_exchange_rate": 85.0},
 		]
 		self.assertEqual(expected, actual)
+
+	def test_pay_to_recd_from(self):
+		jv = make_journal_entry("_Test Cash - _TC", "_Test Bank - _TC", 100, save=False)
+		jv.pay_to_recd_from = "_Test Receiver"
+		jv.save()
+		self.assertEqual(jv.pay_to_recd_from, "_Test Receiver")
+
+		jv.pay_to_recd_from = "_Test Receiver 2"
+		jv.save()
+		jv.submit()
+
+		self.assertEqual(jv.pay_to_recd_from, "_Test Receiver 2")
 
 
 def make_journal_entry(

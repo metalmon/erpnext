@@ -29,11 +29,10 @@ class POSInvoiceMergeLog(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from erpnext.accounts.doctype.pos_invoice_reference.pos_invoice_reference import (
-			POSInvoiceReference,
-		)
+		from erpnext.accounts.doctype.pos_invoice_reference.pos_invoice_reference import POSInvoiceReference
 
 		amended_from: DF.Link | None
+		company: DF.Link
 		consolidated_credit_note: DF.Link | None
 		consolidated_invoice: DF.Link | None
 		customer: DF.Link
@@ -259,6 +258,7 @@ class POSInvoiceMergeLog(Document):
 				if not found:
 					tax.charge_type = "Actual"
 					tax.idx = idx
+					tax.row_id = None
 					idx += 1
 					tax.included_in_print_rate = 0
 					tax.tax_amount = tax.tax_amount_after_discount_amount
@@ -337,6 +337,11 @@ class POSInvoiceMergeLog(Document):
 		if self.merge_invoices_based_on == "Customer Group":
 			invoice.flags.ignore_pos_profile = True
 			invoice.pos_profile = ""
+
+		# Unset Commission Section
+		invoice.set("sales_partner", None)
+		invoice.set("commission_rate", 0)
+		invoice.set("total_commission", 0)
 
 		return invoice
 
@@ -491,8 +496,8 @@ def split_invoices_by_accounting_dimension(pos_invoices):
 
 
 def consolidate_pos_invoices(pos_invoices=None, closing_entry=None):
-	invoices = pos_invoices or (closing_entry and closing_entry.get("pos_transactions"))
-	if frappe.flags.in_test and not invoices:
+	invoices = pos_invoices or (closing_entry and closing_entry.get("pos_invoices"))
+	if frappe.in_test and not invoices:
 		invoices = get_all_unconsolidated_invoices()
 
 	invoice_by_customer = get_invoice_customer_map(invoices)
@@ -509,7 +514,7 @@ def unconsolidate_pos_invoices(closing_entry):
 		"POS Invoice Merge Log", filters={"pos_closing_entry": closing_entry.name}, pluck="name"
 	)
 
-	if len(closing_entry.pos_transactions) >= 10:
+	if len(closing_entry.pos_invoices) >= 10:
 		closing_entry.set_status(update=True, status="Queued")
 		enqueue_job(cancel_merge_logs, merge_logs=merge_logs, closing_entry=closing_entry)
 	else:
@@ -583,6 +588,7 @@ def create_merge_logs(invoice_by_customer, closing_entry=None):
 					merge_log.posting_time = (
 						get_time(closing_entry.get("posting_time")) if closing_entry else nowtime()
 					)
+					merge_log.company = closing_entry.get("company") if closing_entry else None
 					merge_log.customer = customer
 					merge_log.pos_closing_entry = closing_entry.get("name") if closing_entry else None
 					merge_log.set("pos_invoices", _invoices)
@@ -654,7 +660,7 @@ def enqueue_job(job, **kwargs):
 			timeout=10000,
 			event="processing_merge_logs",
 			job_id=job_id,
-			now=frappe.conf.developer_mode or frappe.flags.in_test,
+			now=frappe.conf.developer_mode or frappe.in_test,
 		)
 
 		if job == create_merge_logs:
@@ -666,7 +672,7 @@ def enqueue_job(job, **kwargs):
 
 
 def check_scheduler_status():
-	if is_scheduler_inactive() and not frappe.flags.in_test:
+	if is_scheduler_inactive() and not frappe.in_test:
 		frappe.throw(_("Scheduler is inactive. Cannot enqueue job."), title=_("Scheduler Inactive"))
 
 

@@ -3,6 +3,7 @@
 
 
 import frappe
+import frappe.utils
 from frappe import _, msgprint, throw
 from frappe.contacts.doctype.address.address import get_address_display
 from frappe.model.mapper import get_mapped_doc
@@ -448,7 +449,7 @@ class SalesInvoice(SellingController):
 		self.validate_pos_paid_amount()
 
 		if not self.auto_repeat:
-			frappe.get_doc("Authorization Control").validate_approving_authority(
+			frappe.get_cached_doc("Authorization Control").validate_approving_authority(
 				self.doctype, self.company, self.base_grand_total, self
 			)
 
@@ -474,6 +475,7 @@ class SalesInvoice(SellingController):
 				self.make_bundle_for_sales_purchase_return(table_name)
 				self.make_bundle_using_old_serial_batch_fields(table_name)
 
+			self.validate_standalone_serial_nos_customer()
 			self.update_stock_reservation_entries()
 			self.update_stock_ledger()
 
@@ -495,7 +497,7 @@ class SalesInvoice(SellingController):
 
 		self.update_time_sheet(self.name)
 
-		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
+		if frappe.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
 			update_company_current_month_sales(self.company)
 			self.update_project()
 		update_linked_doc(self.doctype, self.name, self.inter_company_invoice_reference)
@@ -611,7 +613,7 @@ class SalesInvoice(SellingController):
 		if self.coupon_code:
 			update_coupon_code_count(self.coupon_code, "cancelled")
 
-		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
+		if frappe.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
 			update_company_current_month_sales(self.company)
 			self.update_project()
 		if not self.is_return and not self.is_consolidated and self.loyalty_program:
@@ -1016,7 +1018,7 @@ class SalesInvoice(SellingController):
 		)
 
 		if (
-			cint(frappe.db.get_single_value("Selling Settings", "maintain_same_sales_rate"))
+			cint(frappe.get_single_value("Selling Settings", "maintain_same_sales_rate"))
 			and not self.is_return
 			and not self.is_internal_customer
 		):
@@ -1063,7 +1065,7 @@ class SalesInvoice(SellingController):
 			"Delivery Note": ["dn_required", "update_stock"],
 		}
 		for key, value in prev_doc_field_map.items():
-			if frappe.db.get_single_value("Selling Settings", value[0]) == "Yes":
+			if frappe.get_single_value("Selling Settings", value[0]) == "Yes":
 				if frappe.get_value("Customer", self.customer, value[0]):
 					continue
 
@@ -1096,27 +1098,55 @@ class SalesInvoice(SellingController):
 		if self.is_created_using_pos and not self.pos_profile:
 			frappe.throw(_("POS Profile is mandatory to mark this invoice as POS Transaction."))
 
-		self.is_pos_using_sales_invoice = frappe.db.get_single_value(
-			"Accounts Settings", "use_sales_invoice_in_pos"
-		)
-		if not self.is_pos_using_sales_invoice and not self.is_return:
+		self.invoice_type_in_pos = frappe.db.get_single_value("POS Settings", "invoice_type")
+		if self.invoice_type_in_pos == "POS Invoice" and not self.is_return:
 			frappe.throw(_("Transactions using Sales Invoice in POS are disabled."))
 
+		self.validate_pos_opening_entry()
+
 	def validate_full_payment(self):
+		allow_partial_payment = frappe.db.get_value("POS Profile", self.pos_profile, "allow_partial_payment")
 		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
 
-		if self.docstatus == 1:
-			if self.is_return and self.paid_amount != invoice_total:
-				frappe.throw(
-					msg=_("Partial Payment in POS Transactions are not allowed."),
-					exc=PartialPaymentValidationError,
-				)
+		if (
+			self.docstatus == 1
+			and not self.is_return
+			and not allow_partial_payment
+			and self.paid_amount < invoice_total
+		):
+			frappe.throw(
+				msg=_("Partial Payment in POS Transactions are not allowed."),
+				exc=PartialPaymentValidationError,
+			)
 
-			if self.paid_amount < invoice_total:
-				frappe.throw(
-					msg=_("Partial Payment in POS Transactions are not allowed."),
-					exc=PartialPaymentValidationError,
-				)
+	def validate_pos_opening_entry(self):
+		opening_entries = frappe.get_all(
+			"POS Opening Entry",
+			fields=["name", "period_start_date"],
+			filters={"pos_profile": self.pos_profile, "status": "Open"},
+			order_by="period_start_date desc",
+		)
+		if not opening_entries:
+			frappe.throw(
+				title=_("POS Opening Entry Missing"),
+				msg=_("No open POS Opening Entry found for POS Profile {0}.").format(
+					frappe.bold(self.pos_profile)
+				),
+			)
+		if len(opening_entries) > 1:
+			frappe.throw(
+				title=_("Multiple POS Opening Entry"),
+				msg=_(
+					"POS Profile - {0} has multiple open POS Opening Entries. Please close or cancel the existing entries before proceeding."
+				).format(self.pos_profile),
+			)
+		if frappe.utils.get_date_str(opening_entries[0].get("period_start_date")) != frappe.utils.today():
+			frappe.throw(
+				title=_("Outdated POS Opening Entry"),
+				msg=_(
+					"POS Opening Entry - {0} is outdated. Please close the POS and create a new POS Opening Entry."
+				).format(opening_entries[0].get("name")),
+			)
 
 	def validate_warehouse(self):
 		super().validate_warehouse()
@@ -1468,7 +1498,7 @@ class SalesInvoice(SellingController):
 
 	def make_tax_gl_entries(self, gl_entries):
 		enable_discount_accounting = cint(
-			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
+			frappe.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
 
 		for tax in self.get("taxes"):
@@ -1518,7 +1548,7 @@ class SalesInvoice(SellingController):
 	def make_item_gl_entries(self, gl_entries):
 		# income account gl entries
 		enable_discount_accounting = cint(
-			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
+			frappe.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
 
 		for item in self.get("items"):
@@ -1593,7 +1623,7 @@ class SalesInvoice(SellingController):
 	def enable_discount_accounting(self):
 		if not hasattr(self, "_enable_discount_accounting"):
 			self._enable_discount_accounting = cint(
-				frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
+				frappe.get_single_value("Selling Settings", "enable_discount_accounting")
 			)
 
 		return self._enable_discount_accounting
@@ -1635,7 +1665,7 @@ class SalesInvoice(SellingController):
 	def make_pos_gl_entries(self, gl_entries):
 		if cint(self.is_pos):
 			skip_change_gl_entries = not cint(
-				frappe.db.get_single_value("Accounts Settings", "post_change_gl_entries")
+				frappe.get_single_value("Accounts Settings", "post_change_gl_entries")
 			)
 
 			for payment_mode in self.payments:
@@ -2920,7 +2950,7 @@ def check_if_return_invoice_linked_with_payment_entry(self):
 	# If a Return invoice is linked with payment entry along with other invoices,
 	# the cancellation of the Return causes allocated amount to be greater than paid
 
-	if not frappe.db.get_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice"):
+	if not frappe.get_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice"):
 		return
 
 	payment_entries = []

@@ -81,7 +81,7 @@ def validate_filters(filters):
 
 def get_data(filters):
 	accounts = frappe.db.sql(
-		"""select name, account_number, parent_account, account_name, root_type, report_type, lft, rgt
+		"""select name, account_number, parent_account, account_name, root_type, report_type, is_group, lft, rgt
 
 		from `tabAccount` where company=%s order by lft""",
 		filters.company,
@@ -89,9 +89,7 @@ def get_data(filters):
 	)
 	company_currency = filters.presentation_currency or erpnext.get_company_currency(filters.company)
 
-	ignore_is_opening = frappe.db.get_single_value(
-		"Accounts Settings", "ignore_is_opening_check_for_reporting"
-	)
+	ignore_is_opening = frappe.get_single_value("Accounts Settings", "ignore_is_opening_check_for_reporting")
 
 	if not accounts:
 		return None
@@ -148,9 +146,7 @@ def get_rootwise_opening_balances(filters, report_type, ignore_is_opening):
 	gle = []
 
 	last_period_closing_voucher = ""
-	ignore_closing_balances = frappe.db.get_single_value(
-		"Accounts Settings", "ignore_account_closing_balance"
-	)
+	ignore_closing_balances = frappe.get_single_value("Accounts Settings", "ignore_account_closing_balance")
 
 	if not ignore_closing_balances:
 		last_period_closing_voucher = frappe.db.get_all(
@@ -405,6 +401,9 @@ def prepare_data(accounts, filters, parent_children_map, company_currency):
 			"from_date": filters.from_date,
 			"to_date": filters.to_date,
 			"currency": company_currency,
+			"is_group_account": d.is_group,
+			"acc_name": d.account_name,
+			"acc_number": d.account_number,
 			"account_name": (
 				f"{d.account_number} - {d.account_name}" if d.account_number else d.account_name
 			),
@@ -421,6 +420,10 @@ def prepare_data(accounts, filters, parent_children_map, company_currency):
 		data.append(row)
 
 	total_row = calculate_total_row(accounts, company_currency)
+
+	if not filters.get("show_group_accounts"):
+		data = hide_group_accounts(data)
+
 	data.extend([{}, total_row])
 
 	return data
@@ -434,6 +437,20 @@ def get_columns():
 			"fieldtype": "Link",
 			"options": "Account",
 			"width": 300,
+		},
+		{
+			"fieldname": "acc_name",
+			"label": _("Account Name"),
+			"fieldtype": "Data",
+			"hidden": 1,
+			"width": 250,
+		},
+		{
+			"fieldname": "acc_number",
+			"label": _("Account Number"),
+			"fieldtype": "Data",
+			"hidden": 1,
+			"width": 120,
 		},
 		{
 			"fieldname": "currency",
@@ -500,3 +517,12 @@ def prepare_opening_closing(row):
 			row[valid_col] = 0.0
 		else:
 			row[reverse_col] = 0.0
+
+
+def hide_group_accounts(data):
+	non_group_accounts_data = []
+	for d in data:
+		if not d.get("is_group_account"):
+			d.update(indent=0)
+			non_group_accounts_data.append(d)
+	return non_group_accounts_data

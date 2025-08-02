@@ -87,7 +87,8 @@ class BudgetValidation:
 			self.get_ordered_amount(key)
 			self.get_requested_amount(key)
 
-			self.handle_action(key, v)
+			# Pre-emptive validation before hitting ledger
+			self.handle_actions(key, v)
 
 			# Validation happens after submit for Purchase Order and
 			# Material Request and so will be included in the query
@@ -96,7 +97,7 @@ class BudgetValidation:
 				v.current_actual_exp_amount = sum([x.debit - x.credit for x in v.get("gl_to_process", [])])
 
 			self.get_actual_expense(key)
-			self.handle_action(key, v)
+			self.handle_actions(key, v)
 
 	def get_child_nodes(self, budget_against, dimension):
 		lft, rgt = frappe.db.get_all(
@@ -153,7 +154,7 @@ class BudgetValidation:
 	def get_dimensions(self):
 		self.dimensions = []
 		for _x in frappe.db.get_all("Accounting Dimension"):
-			self.dimensions.append(frappe.get_doc("Accounting Dimension", _x.name))
+			self.dimensions.append(frappe.get_lazy_doc("Accounting Dimension", _x.name))
 		self.dimensions.extend(
 			[
 				{"fieldname": "cost_center", "document_type": "Cost Center"},
@@ -182,6 +183,9 @@ class BudgetValidation:
 				bud.applicable_on_booking_actual_expenses,
 				bud.action_if_annual_budget_exceeded,
 				bud.action_if_accumulated_monthly_budget_exceeded,
+				bud.applicable_on_cumulative_expense,
+				bud.action_if_annual_exceeded_on_cumulative_expense,
+				bud.action_if_accumulated_monthly_exceeded_on_cumulative_expense,
 				bud_acc.account,
 				bud_acc.budget_amount,
 			)
@@ -328,7 +332,7 @@ class BudgetValidation:
 				)
 				self.execute_action(config.action_for_monthly, _msg)
 
-	def handle_action(self, key, v_map):
+	def handle_purchase_order_overlimit(self, key, v_map):
 		self.handle_individual_doctype_action(
 			key,
 			frappe._dict(
@@ -344,6 +348,8 @@ class BudgetValidation:
 			v_map.current_ordered_amount,
 			v_map.accumulated_monthly_budget,
 		)
+
+	def handle_material_request_overlimit(self, key, v_map):
 		self.handle_individual_doctype_action(
 			key,
 			frappe._dict(
@@ -359,6 +365,8 @@ class BudgetValidation:
 			v_map.current_requested_amount,
 			v_map.accumulated_monthly_budget,
 		)
+
+	def handle_actual_expense_overlimit(self, key, v_map):
 		self.handle_individual_doctype_action(
 			key,
 			frappe._dict(
@@ -375,6 +383,58 @@ class BudgetValidation:
 			v_map.accumulated_monthly_budget,
 		)
 
+	def handle_actions(self, key, v_map):
+		self.handle_purchase_order_overlimit(key, v_map)
+		self.handle_material_request_overlimit(key, v_map)
+		self.handle_actual_expense_overlimit(key, v_map)
+		# PO + MR + Actual Expense
+		self.handle_cumulative_overlimit(key, v_map)
+
+	def handle_cumulative_overlimit(self, key, v_map):
+		if v_map.budget_doc.applicable_on_cumulative_expense:
+			self.handle_cumulative_overlimit_for_monthly(key, v_map)
+			self.handle_cumulative_overlimit_for_annual(key, v_map)
+
+	def budget_applicable_for(self, v_map, current_amt) -> str:
+		budget_doc = v_map.budget_doc
+		doctypes = []
+		if budget_doc.applicable_on_purchase_order and v_map.ordered_amount:
+			doctypes.append("Purchase Order")
+		if budget_doc.applicable_on_material_request and v_map.requested_amount:
+			doctypes.append("Material Request")
+		if budget_doc.applicable_on_booking_actual_expenses and v_map.actual_expense:
+			doctypes.append("Actual Expense")
+		if current_amt:
+			doctypes.append("This Document")
+
+		doctypes = [f"'{x}'" for x in doctypes]
+		return "+".join(doctypes)
+
+	def handle_cumulative_overlimit_for_monthly(self, key, v_map):
+		current_amt = (
+			v_map.current_ordered_amount + v_map.current_requested_amount + v_map.current_actual_exp_amount
+		)
+		monthly_diff = (
+			v_map.ordered_amount + v_map.requested_amount + v_map.actual_expense + current_amt
+		) - v_map.accumulated_monthly_budget
+		if monthly_diff > 0:
+			currency = frappe.get_cached_value("Company", self.company, "default_currency")
+			_msg = _(
+				"Accumulated Monthly Budget for Account {0} against {1} {2} is {3}. It will be collectively ({4}) exceeded by {5}"
+			).format(
+				frappe.bold(key[2]),
+				frappe.bold(frappe.unscrub(key[0])),
+				frappe.bold(key[1]),
+				frappe.bold(fmt_money(v_map.accumulated_montly_budget, currency=currency)),
+				self.budget_applicable_for(v_map, current_amt),
+				frappe.bold(fmt_money(monthly_diff, currency=currency)),
+			)
+
+			self.execute_action(
+				v_map.budget_doc.action_if_accumulated_monthly_exceeded_on_cumulative_expense, _msg
+			)
+
+	def handle_cumulative_overlimit_for_annual(self, key, v_map):
 		current_amt = (
 			v_map.current_ordered_amount + v_map.current_requested_amount + v_map.current_actual_exp_amount
 		)
@@ -384,12 +444,13 @@ class BudgetValidation:
 		if total_diff > 0:
 			currency = frappe.get_cached_value("Company", self.company, "default_currency")
 			_msg = _(
-				"Annual Budget for Account {0} against {1} {2} is {3}. It will be exceeded by {4}"
+				"Annual Budget for Account {0} against {1} {2} is {3}. It will be collectively ({4}) exceeded by {5}"
 			).format(
 				frappe.bold(key[2]),
 				frappe.bold(frappe.unscrub(key[0])),
 				frappe.bold(key[1]),
 				frappe.bold(fmt_money(v_map.budget_amount, currency=currency)),
+				self.budget_applicable_for(v_map, current_amt),
 				frappe.bold(fmt_money(total_diff, currency=currency)),
 			)
-			self.stop(_msg)
+			self.execute_action(v_map.budget_doc.action_if_annual_exceeded_on_cumulative_expense, _msg)

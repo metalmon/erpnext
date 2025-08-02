@@ -121,7 +121,11 @@ class StockSettings(Document):
 				)
 
 	def cant_change_valuation_method(self):
-		previous_valuation_method = self.get_doc_before_save().get("valuation_method")
+		doc_before_save = self.get_doc_before_save()
+		if not doc_before_save:
+			return
+
+		previous_valuation_method = doc_before_save.get("valuation_method")
 
 		if previous_valuation_method and previous_valuation_method != self.valuation_method:
 			# check if there are any stock ledger entries against items
@@ -145,7 +149,7 @@ class StockSettings(Document):
 			# changed to text
 			frappe.enqueue(
 				"erpnext.stock.doctype.stock_settings.stock_settings.clean_all_descriptions",
-				now=frappe.flags.in_test,
+				now=frappe.in_test,
 				enqueue_after_commit=True,
 			)
 
@@ -160,7 +164,7 @@ class StockSettings(Document):
 			self.auto_reserve_stock = 0
 
 		# Skip validation for tests
-		if frappe.flags.in_test:
+		if frappe.in_test:
 			return
 
 		# Change in value of `Allow Negative Stock`

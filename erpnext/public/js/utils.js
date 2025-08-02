@@ -464,6 +464,16 @@ $.extend(erpnext.utils, {
 		}
 		return fiscal_year;
 	},
+
+	set_letter_head: function (frm) {
+		if (frm.fields_dict.letter_head) {
+			frappe.db.get_value("Company", frm.doc.company, "default_letter_head").then((res) => {
+				if (res.message?.default_letter_head) {
+					frm.set_value("letter_head", res.message.default_letter_head);
+				}
+			});
+		}
+	},
 });
 
 erpnext.utils.select_alternate_items = function (opts) {
@@ -722,7 +732,7 @@ erpnext.utils.update_child_items = function (opts) {
 							} = r.message;
 
 							const row = dialog.fields_dict.trans_items.df.data.find(
-								(doc) => doc.idx == me.doc.idx
+								(row) => row.name == me.doc.name
 							);
 							if (row) {
 								Object.assign(row, {
@@ -1027,15 +1037,11 @@ erpnext.utils.map_current_doc = function (opts) {
 					return;
 				}
 
-				if (values.constructor === Array) {
-					opts.source_name = [...new Set(values)];
-				} else {
-					opts.source_name = values;
-				}
+				opts.source_name = Array.isArray(values) ? [...new Set(values)] : values;
 
 				if (
 					opts.allow_child_item_selection ||
-					["Purchase Receipt", "Delivery Note"].includes(opts.source_doctype)
+					["Purchase Receipt", "Delivery Note", "Pick List"].includes(opts.source_doctype)
 				) {
 					// args contains filtered child docnames
 					opts.args = args;

@@ -242,7 +242,7 @@
   {
    "fieldname": "date_of_joining",
    "fieldtype": "Date",
-   "label": "Date of Assumption of Duties",
+   "label": "Date of Joining",
    "oldfieldname": "date_of_joining",
    "oldfieldtype": "Date",
    "reqd": 1
@@ -600,7 +600,7 @@
    "collapsible": 1,
    "fieldname": "exit",
    "fieldtype": "Tab Break",
-   "label": "Offboarding ",
+   "label": "Employee Exit",
    "oldfieldtype": "Section Break"
   },
   {
@@ -822,7 +822,7 @@
  "image_field": "image",
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-29 19:12:02.269649",
+ "modified": "2025-07-04 08:29:34.347269",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Employee",
@@ -864,7 +864,6 @@
    "write": 1
   }
  ],
- "row_format": "Dynamic",
  "search_fields": "employee_name",
  "show_name_in_global_search": 1,
  "sort_field": "creation",

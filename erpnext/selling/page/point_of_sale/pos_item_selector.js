@@ -34,6 +34,9 @@ erpnext.PointOfSale.ItemSelector = class {
 
 		this.$component = this.wrapper.find(".items-selector");
 		this.$items_container = this.$component.find(".items-container");
+
+		const show_hide_images = this.hide_images ? "hide-item-image" : "show-item-image";
+		this.$items_container.addClass(show_hide_images);
 	}
 
 	async load_items_data() {
@@ -73,10 +76,23 @@ erpnext.PointOfSale.ItemSelector = class {
 	render_item_list(items) {
 		this.$items_container.html("");
 
+		if (this.hide_images) {
+			this.$items_container.append(this.render_item_list_column_header());
+		}
+
 		items.forEach((item) => {
 			const item_html = this.get_item_html(item);
 			this.$items_container.append(item_html);
 		});
+	}
+
+	render_item_list_column_header() {
+		return `<div class="list-column">
+			<div class="column-name">Name</div>
+			<div class="column-price">Price</div>
+			<div class="column-uom">UOM</div>
+			<div class="column-qty-available">Quantity Available</div>
+		</div>`;
 	}
 
 	get_item_html(item) {
@@ -100,7 +116,8 @@ erpnext.PointOfSale.ItemSelector = class {
 		}
 
 		function get_item_image_html() {
-			if (!me.hide_images && item_image) {
+			if (me.hide_images) return "";
+			if (item_image) {
 				return `<div class="item-qty-pill">
 							<span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span>
 						</div>
@@ -130,9 +147,19 @@ erpnext.PointOfSale.ItemSelector = class {
 
 				<div class="item-detail">
 					<div class="item-name">
-						${frappe.ellipsis(item.item_name, 18)}
+						${!me.hide_images ? frappe.ellipsis(item.item_name, 18) : item.item_name}
 					</div>
-					<div class="item-rate">${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}</div>
+					${
+						!me.hide_images
+							? `<div class="item-rate">
+								${format_currency(price_list_rate, item.currency, precision) || 0} / ${uom}
+							</div>`
+							: `
+							<div class="item-price">${format_currency(price_list_rate, item.currency, precision) || 0}</div>
+							<div class="item-uom">${uom}</div>
+							<div class="item-qty-available">${qty_to_display || "Non stock item"}</div>
+							`
+					}
 				</div>
 			</div>`;
 	}
@@ -188,7 +215,7 @@ erpnext.PointOfSale.ItemSelector = class {
 
 	attach_clear_btn() {
 		this.search_field.$wrapper.find(".control-input").append(
-			`<span class="link-btn" style="top: 2px;">
+			`<span class="link-btn">
 				<a class="btn-open no-decoration" title="${__("Clear")}">
 					${frappe.utils.icon("close", "sm")}
 				</a>
@@ -345,7 +372,10 @@ erpnext.PointOfSale.ItemSelector = class {
 				const items = this.search_index[selling_price_list][search_term];
 				this.items = items;
 				this.render_item_list(items);
-				this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
+				this.auto_add_item &&
+					this.search_field.$input[0].value &&
+					this.items.length == 1 &&
+					this.add_filtered_item_to_cart();
 				return;
 			}
 		}
@@ -358,35 +388,16 @@ erpnext.PointOfSale.ItemSelector = class {
 			}
 			this.items = items;
 			this.render_item_list(items);
-			this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
+			this.auto_add_item &&
+				this.search_field.$input[0].value &&
+				this.items.length == 1 &&
+				this.add_filtered_item_to_cart();
 		});
 	}
 
 	add_filtered_item_to_cart() {
 		this.$items_container.find(".item-wrapper").click();
 		this.set_search_value("");
-	}
-
-	resize_selector(minimize) {
-		minimize
-			? this.$component
-					.find(".filter-section")
-					.css("grid-template-columns", "repeat(1, minmax(0, 1fr))")
-			: this.$component
-					.find(".filter-section")
-					.css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
-
-		minimize
-			? this.$component.find(".search-field").css("margin", "var(--margin-sm) 0px")
-			: this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
-
-		minimize
-			? this.$component.css("grid-column", "span 2 / span 2")
-			: this.$component.css("grid-column", "span 6 / span 6");
-
-		minimize
-			? this.$items_container.css("grid-template-columns", "repeat(1, minmax(0, 1fr))")
-			: this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
 	}
 
 	toggle_component(show) {

@@ -113,6 +113,10 @@ class TestBudget(ERPNextTestSuite):
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 		frappe.db.set_value("Budget", budget.name, "fiscal_year", fiscal_year)
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
+
 		mr = frappe.get_doc(
 			{
 				"doctype": "Material Request",
@@ -126,7 +130,7 @@ class TestBudget(ERPNextTestSuite):
 						"uom": "_Test UOM",
 						"warehouse": "_Test Warehouse - _TC",
 						"schedule_date": nowdate(),
-						"rate": 100000,
+						"rate": accumulated_limit + 1,
 						"expense_account": "_Test Account Cost for Goods Sold - _TC",
 						"cost_center": "_Test Cost Center - _TC",
 					}
@@ -380,6 +384,44 @@ class TestBudget(ERPNextTestSuite):
 
 		self.assertRaises(BudgetError, jv.submit)
 
+	def test_action_for_cumulative_limit(self):
+		set_total_expense_zero(nowdate(), "cost_center")
+
+		budget = make_budget(budget_against="Cost Center", applicable_on_cumulative_expense=True)
+
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
+
+		jv = make_journal_entry(
+			"_Test Account Cost for Goods Sold - _TC",
+			"_Test Bank - _TC",
+			accumulated_limit - 1,
+			"_Test Cost Center - _TC",
+			posting_date=nowdate(),
+		)
+		jv.submit()
+
+		frappe.db.set_value(
+			"Budget", budget.name, "action_if_accumulated_monthly_exceeded_on_cumulative_expense", "Stop"
+		)
+		po = create_purchase_order(
+			transaction_date=nowdate(), qty=1, rate=accumulated_limit + 1, do_not_submit=True
+		)
+		po.set_missing_values()
+
+		self.assertRaises(BudgetError, po.submit)
+
+		frappe.db.set_value(
+			"Budget", budget.name, "action_if_accumulated_monthly_exceeded_on_cumulative_expense", "Ignore"
+		)
+		po.submit()
+
+		budget.load_from_db()
+		budget.cancel()
+		po.cancel()
+		jv.cancel()
+
 
 def set_total_expense_zero(posting_date, budget_against_field=None, budget_against_CC=None):
 	if budget_against_field == "project":
@@ -477,6 +519,15 @@ def make_budget(**args):
 		budget.action_if_annual_budget_exceeded_on_po = args.action_if_annual_budget_exceeded_on_po or "Warn"
 		budget.action_if_accumulated_monthly_budget_exceeded_on_po = (
 			args.action_if_accumulated_monthly_budget_exceeded_on_po or "Warn"
+		)
+
+	if args.applicable_on_cumulative_expense:
+		budget.applicable_on_cumulative_expense = 1
+		budget.action_if_annual_exceeded_on_cumulative_expense = (
+			args.action_if_annual_exceeded_on_cumulative_expense or "Warn"
+		)
+		budget.action_if_accumulated_monthly_exceeded_on_cumulative_expense = (
+			args.action_if_accumulated_monthly_exceeded_on_cumulative_expense or "Warn"
 		)
 
 	budget.insert()
