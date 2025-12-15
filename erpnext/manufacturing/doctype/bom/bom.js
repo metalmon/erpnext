@@ -45,7 +45,7 @@ frappe.ui.form.on("BOM", {
 			return {
 				query: "erpnext.manufacturing.doctype.bom.bom.item_query",
 				filters: {
-					is_stock_item: 1,
+					is_stock_item: !frm.doc.is_phantom_bom,
 				},
 			};
 		});
@@ -183,7 +183,7 @@ frappe.ui.form.on("BOM", {
 			);
 		}
 
-		if (frm.doc.docstatus == 1) {
+		if (frm.doc.docstatus == 1 && !frm.doc.is_phantom_bom) {
 			frm.add_custom_button(
 				__("Work Order"),
 				function () {
@@ -460,10 +460,12 @@ frappe.ui.form.on("BOM", {
 		);
 
 		has_template_rm.forEach((d) => {
+			let bom_qty = dialog.fields_dict.qty?.value || 1;
+
 			dialog.fields_dict.items.df.data.push({
 				item_code: d.item_code,
 				variant_item_code: "",
-				qty: (d.qty / frm.doc.quantity) * (dialog.fields_dict.qty.value || 1),
+				qty: flt(d.qty / frm.doc.quantity) * flt(bom_qty),
 				source_warehouse: d.source_warehouse,
 				operation: d.operation,
 			});
@@ -529,9 +531,24 @@ frappe.ui.form.on("BOM", {
 
 		frm.set_value("process_loss_qty", qty);
 	},
+
+	is_phantom_bom(frm) {
+		frm.doc.item = "";
+		frm.doc.uom = "";
+		frm.doc.quantity = 1;
+		frm.doc.items = undefined;
+		frm.refresh();
+	},
 });
 
 frappe.ui.form.on("BOM Operation", {
+	finished_good(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		if (row.finished_good === frm.doc.item) {
+			frappe.model.set_value(row.doctype, row.name, "is_final_finished_good", 1);
+		}
+	},
+
 	bom_no(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
 
@@ -809,6 +826,31 @@ frappe.ui.form.on("BOM Operation", "workstation", function (frm, cdt, cdn) {
 		args: {
 			doctype: "Workstation",
 			name: d.workstation,
+		},
+		callback: function (data) {
+			frappe.model.set_value(d.doctype, d.name, "base_hour_rate", data.message.hour_rate);
+			frappe.model.set_value(
+				d.doctype,
+				d.name,
+				"hour_rate",
+				flt(flt(data.message.hour_rate) / flt(frm.doc.conversion_rate)),
+				2
+			);
+
+			erpnext.bom.calculate_op_cost(frm.doc);
+			erpnext.bom.calculate_total(frm.doc);
+		},
+	});
+});
+
+frappe.ui.form.on("BOM Operation", "workstation_type", function (frm, cdt, cdn) {
+	var d = locals[cdt][cdn];
+	if (!d.workstation_type) return;
+	frappe.call({
+		method: "frappe.client.get",
+		args: {
+			doctype: "Workstation Type",
+			name: d.workstation_type,
 		},
 		callback: function (data) {
 			frappe.model.set_value(d.doctype, d.name, "base_hour_rate", data.message.hour_rate);

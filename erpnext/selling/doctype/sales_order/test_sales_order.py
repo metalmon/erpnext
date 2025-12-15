@@ -11,7 +11,7 @@ from frappe.tests import IntegrationTestCase, change_settings
 from frappe.utils import add_days, flt, getdate, nowdate, today
 
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
-from erpnext.controllers.accounts_controller import InvalidQtyError, update_child_qty_rate
+from erpnext.controllers.accounts_controller import InvalidQtyError, get_due_date, update_child_qty_rate
 from erpnext.maintenance.doctype.maintenance_schedule.test_maintenance_schedule import (
 	make_maintenance_schedule,
 )
@@ -177,6 +177,9 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		so.load_from_db()
 		self.assertEqual(so.per_billed, 0)
 
+	@IntegrationTestCase.change_settings(
+		"Accounts Settings", {"automatically_fetch_payment_terms": 1}
+	)  # Enable auto fetch
 	def test_make_sales_invoice_with_terms(self):
 		so = make_sales_order(do_not_submit=True)
 
@@ -204,6 +207,38 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 		si1 = make_sales_invoice(so.name)
 		self.assertEqual(len(si1.get("items")), 0)
+
+	@IntegrationTestCase.change_settings(
+		"Accounts Settings", {"automatically_fetch_payment_terms": 1}
+	)  # Enable auto fetch
+	def test_auto_fetch_terms_enable(self):
+		so = make_sales_order(do_not_submit=True)
+
+		so.payment_terms_template = "_Test Payment Term Template"
+		so.save()
+		so.submit()
+
+		si = make_sales_invoice(so.name)
+		# Check if payment terms are copied from sales order to sales invoice
+		self.assertTrue(si.payment_terms_template)
+		si.insert()
+		si.submit()
+
+	@IntegrationTestCase.change_settings(
+		"Accounts Settings", {"automatically_fetch_payment_terms": 0}
+	)  # Disable auto fetch
+	def test_auto_fetch_terms_disable(self):
+		so = make_sales_order(do_not_submit=True)
+
+		so.payment_terms_template = "_Test Payment Term Template"
+		so.save()
+		so.submit()
+
+		si = make_sales_invoice(so.name)
+		# Check if payment terms are not copied from sales order to sales invoice
+		self.assertFalse(si.payment_terms_template)
+		si.insert()
+		si.submit()
 
 	def test_update_qty(self):
 		so = make_sales_order()
@@ -1038,7 +1073,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 	def test_drop_shipping(self):
 		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
 		from erpnext.selling.doctype.sales_order.sales_order import (
-			make_purchase_order_for_default_supplier,
+			make_purchase_order,
 		)
 		from erpnext.selling.doctype.sales_order.sales_order import update_status as so_update_status
 
@@ -1071,7 +1106,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		so = make_sales_order(item_list=so_items, do_not_submit=True)
 		so.submit()
 
-		po = make_purchase_order_for_default_supplier(so.name, selected_items=[so_items[0]])[0]
+		po = make_purchase_order(so.name, selected_items=[so_items[0]])[0]
 		po.submit()
 
 		dn = create_dn_against_so(so.name, delivered_qty=2)
@@ -1129,7 +1164,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 	def test_drop_shipping_partial_order(self):
 		from erpnext.selling.doctype.sales_order.sales_order import (
-			make_purchase_order_for_default_supplier,
+			make_purchase_order,
 		)
 		from erpnext.selling.doctype.sales_order.sales_order import update_status as so_update_status
 
@@ -1165,7 +1200,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		so.submit()
 
 		# create po for only one item
-		po1 = make_purchase_order_for_default_supplier(so.name, selected_items=[so_items[0]])[0]
+		po1 = make_purchase_order(so.name, selected_items=[so_items[0]])[0]
 		po1.submit()
 
 		self.assertEqual(so.customer, po1.customer)
@@ -1175,7 +1210,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		self.assertEqual(len(po1.items), 1)
 
 		# create po for remaining item
-		po2 = make_purchase_order_for_default_supplier(so.name, selected_items=[so_items[1]])[0]
+		po2 = make_purchase_order(so.name, selected_items=[so_items[1]])[0]
 		po2.submit()
 
 		# teardown
@@ -1189,7 +1224,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 	def test_drop_shipping_full_for_default_suppliers(self):
 		"""Test if multiple POs are generated in one go against different default suppliers."""
 		from erpnext.selling.doctype.sales_order.sales_order import (
-			make_purchase_order_for_default_supplier,
+			make_purchase_order,
 		)
 
 		if not frappe.db.exists("Item", "_Test Item for Drop Shipping 1"):
@@ -1221,11 +1256,11 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		so = make_sales_order(item_list=so_items, do_not_submit=True)
 		so.submit()
 
-		purchase_orders = make_purchase_order_for_default_supplier(so.name, selected_items=so_items)
+		purchase_orders = make_purchase_order(so.name, selected_items=so_items)
 
 		self.assertEqual(len(purchase_orders), 2)
-		self.assertEqual(purchase_orders[0].supplier, "_Test Supplier")
-		self.assertEqual(purchase_orders[1].supplier, "_Test Supplier 1")
+		supplier_list = sorted([purchase_orders[0].supplier, purchase_orders[1].supplier])
+		self.assertEqual(supplier_list, ["_Test Supplier", "_Test Supplier 1"])
 
 	def test_product_bundles_in_so_are_replaced_with_bundle_items_in_po(self):
 		"""
@@ -1253,7 +1288,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 		so = make_sales_order(item_list=so_items)
 
-		purchase_order = make_purchase_order(so.name, selected_items=so_items)
+		purchase_order = make_purchase_order(so.name, selected_items=so_items)[0]
 
 		self.assertEqual(purchase_order.items[0].item_code, "_Test Bundle Item 1")
 		self.assertEqual(purchase_order.items[1].item_code, "_Test Bundle Item 2")
@@ -1283,7 +1318,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 		so = make_sales_order(item_list=so_items)
 
-		purchase_order = make_purchase_order(so.name, selected_items=so_items)
+		purchase_order = make_purchase_order(so.name, selected_items=so_items)[0]
 		purchase_order.supplier = "_Test Supplier"
 		purchase_order.set_warehouse = "_Test Warehouse - _TC"
 		purchase_order.save()
@@ -1678,13 +1713,12 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		so.load_from_db()
 		self.assertRaises(frappe.LinkExistsError, so.cancel)
 
+	@IntegrationTestCase.change_settings("Accounts Settings", {"automatically_fetch_payment_terms": 1})
 	def test_payment_terms_are_fetched_when_creating_sales_invoice(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			create_payment_terms_template,
 		)
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
-
-		automatically_fetch_payment_terms()
 
 		so = make_sales_order(uom="Nos", do_not_save=1)
 		create_payment_terms_template()
@@ -1698,8 +1732,6 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 		self.assertEqual(so.payment_terms_template, si.payment_terms_template)
 		compare_payment_schedules(self, so, si)
-
-		automatically_fetch_payment_terms(enable=0)
 
 	def test_zero_amount_sales_order_billing_status(self):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
@@ -1799,7 +1831,7 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		mr.submit()
 
 		# WO from MR
-		wo_name = raise_work_orders(mr.name)[0]
+		wo_name = raise_work_orders(mr.name, mr.company)[0]
 		wo = frappe.get_doc("Work Order", wo_name)
 		wo.wip_warehouse = "Work In Progress - _TC"
 		wo.skip_transfer = True
@@ -2562,23 +2594,45 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		)
 		so.submit()
 
-		po = make_purchase_order(so.name, selected_items=so.items)
+		po = make_purchase_order(so.name, selected_items=so.items)[0]
 		po.supplier = "_Test Supplier"
 		po.items[0].rate = 100
 		po.submit()
 		self.assertEqual(po.taxes[0].tax_amount, 2)
 
+	def test_pending_quantity_after_update_item_during_invoice_creation(self):
+		so = make_sales_order(qty=30, rate=100)
 
-def automatically_fetch_payment_terms(enable=1):
-	accounts_settings = frappe.get_doc("Accounts Settings")
-	accounts_settings.automatically_fetch_payment_terms = enable
-	accounts_settings.save()
+		si1 = make_sales_invoice(so.name)
+		si1.get("items")[0].qty = 10
+		si1.insert()
+		si1.submit()
+
+		first_item_of_so = so.get("items")[0]
+		trans_item = json.dumps(
+			[
+				{
+					"item_code": first_item_of_so.item_code,
+					"rate": 1000,
+					"qty": first_item_of_so.qty,
+					"docname": first_item_of_so.name,
+				},
+			]
+		)
+		update_child_qty_rate("Sales Order", trans_item, so.name)
+
+		si2 = make_sales_invoice(so.name)
+		self.assertEqual(si2.items[0].qty, 20)
 
 
 def compare_payment_schedules(doc, doc1, doc2):
 	for index, schedule in enumerate(doc1.get("payment_schedule")):
+		posting_date = doc1.get("bill_date") or doc1.get("posting_date") or doc1.get("transaction_date")
+		due_date = schedule.due_date
+		if schedule.due_date_based_on:
+			due_date = get_due_date(schedule, posting_date=posting_date)
 		doc.assertEqual(schedule.payment_term, doc2.payment_schedule[index].payment_term)
-		doc.assertEqual(getdate(schedule.due_date), doc2.payment_schedule[index].due_date)
+		doc.assertEqual(due_date, doc2.payment_schedule[index].due_date)
 		doc.assertEqual(schedule.invoice_portion, doc2.payment_schedule[index].invoice_portion)
 		doc.assertEqual(schedule.payment_amount, doc2.payment_schedule[index].payment_amount)
 
@@ -2594,6 +2648,7 @@ def make_sales_order(**args):
 	so.customer = args.customer or "_Test Customer"
 	so.currency = args.currency or "INR"
 	so.po_no = args.po_no or ""
+	so.is_subcontracted = args.is_subcontracted or 0
 	if args.selling_price_list:
 		so.selling_price_list = args.selling_price_list
 

@@ -7,6 +7,9 @@ from frappe.query_builder import DocType
 from frappe.utils import cint, flt, get_link_to_form, getdate, time_diff_in_hours
 
 import erpnext
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_accounting_dimensions,
+)
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.assets.doctype.asset.asset import get_asset_account
 from erpnext.assets.doctype.asset_activity.asset_activity import add_asset_activity
@@ -82,10 +85,20 @@ class AssetRepair(AccountsController):
 
 	def validate_purchase_invoices(self):
 		for d in self.invoices:
+			self.validate_purchase_invoice_status(d.purchase_invoice)
 			invoice_items = self.get_invoice_items(d.purchase_invoice)
 			self.validate_service_purchase_invoice(d.purchase_invoice, invoice_items)
 			self.validate_expense_account(d, invoice_items)
 			self.validate_purchase_invoice_repair_cost(d, invoice_items)
+
+	def validate_purchase_invoice_status(self, purchase_invoice):
+		docstatus = frappe.db.get_value("Purchase Invoice", purchase_invoice, "docstatus")
+		if docstatus == 0:
+			frappe.throw(
+				_("{0} is still in Draft. Please submit it before saving the Asset Repair.").format(
+					get_link_to_form("Purchase Invoice", purchase_invoice)
+				)
+			)
 
 	def get_invoice_items(self, pi):
 		invoice_items = frappe.get_all(
@@ -221,6 +234,12 @@ class AssetRepair(AccountsController):
 			}
 		)
 
+		accounting_dimensions = {
+			"cost_center": self.cost_center,
+			"project": self.project,
+			**{dimension: self.get(dimension) for dimension in get_accounting_dimensions()},
+		}
+
 		for stock_item in self.get("stock_items"):
 			self.validate_serial_no(stock_item)
 
@@ -232,8 +251,7 @@ class AssetRepair(AccountsController):
 					"qty": stock_item.consumed_quantity,
 					"basic_rate": stock_item.valuation_rate,
 					"serial_and_batch_bundle": stock_item.serial_and_batch_bundle,
-					"cost_center": self.cost_center,
-					"project": self.project,
+					**accounting_dimensions,
 				},
 			)
 
@@ -310,7 +328,8 @@ class AssetRepair(AccountsController):
 					"voucher_no": self.name,
 					"cost_center": self.cost_center,
 					"posting_date": self.completion_date,
-					"against_voucher_type": "Purchase Invoice",
+					"against_voucher_type": "Asset",
+					"against_voucher": self.asset,
 					"company": self.company,
 				},
 				item=self,

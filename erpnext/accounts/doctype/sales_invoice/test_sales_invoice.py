@@ -63,7 +63,8 @@ class TestSalesInvoice(ERPNextTestSuite):
 		set_default_account_for_mode_of_payment(
 			mode_of_payment, "_Test Company with perpetual inventory", "_Test Bank - TCP1"
 		)
-		frappe.db.set_single_value("Accounts Settings", "acc_frozen_upto", None)
+		for company in frappe.get_all("Company", pluck="name"):
+			frappe.db.set_value("Company", company, "accounts_frozen_till_date", None)
 
 	@change_settings(
 		"Accounts Settings",
@@ -2077,12 +2078,12 @@ class TestSalesInvoice(ERPNextTestSuite):
 			{
 				"item": "_Test Item",
 				"taxable_amount": 10000.0,
-				"Service Tax": {"tax_rate": 10.0, "tax_amount": 1000.0, "net_amount": 10000.0},
+				"Service Tax": {"tax_rate": 10.0, "tax_amount": 1000.0, "taxable_amount": 10000.0},
 			},
 			{
 				"item": "_Test Item 2",
 				"taxable_amount": 5000.0,
-				"Service Tax": {"tax_rate": 10.0, "tax_amount": 500.0, "net_amount": 5000.0},
+				"Service Tax": {"tax_rate": 10.0, "tax_amount": 500.0, "taxable_amount": 5000.0},
 			},
 		]
 
@@ -3398,8 +3399,8 @@ class TestSalesInvoice(ERPNextTestSuite):
 			si.commission_rate = commission_rate
 			self.assertRaises(frappe.ValidationError, si.save)
 
-	@IntegrationTestCase.change_settings("Accounts Settings", {"acc_frozen_upto": add_days(getdate(), 1)})
 	def test_sales_invoice_submission_post_account_freezing_date(self):
+		frappe.db.set_value("Company", "_Test Company", "accounts_frozen_till_date", add_days(getdate(), 1))
 		si = create_sales_invoice(do_not_save=True)
 		si.posting_date = add_days(getdate(), 1)
 		si.save()
@@ -3407,6 +3408,7 @@ class TestSalesInvoice(ERPNextTestSuite):
 		self.assertRaises(frappe.ValidationError, si.submit)
 		si.posting_date = getdate()
 		si.submit()
+		frappe.db.set_value("Company", "_Test Company", "accounts_frozen_till_date", None)
 
 	@IntegrationTestCase.change_settings("Accounts Settings", {"over_billing_allowance": 0})
 	def test_over_billing_case_against_delivery_note(self):
@@ -3473,7 +3475,7 @@ class TestSalesInvoice(ERPNextTestSuite):
 		si.save()
 		si.submit()
 
-		frappe.db.set_single_value("Accounts Settings", "acc_frozen_upto", getdate("2019-01-31"))
+		frappe.db.set_value("Company", "_Test Company", "accounts_frozen_till_date", getdate("2019-01-31"))
 
 		pda1 = frappe.get_doc(
 			dict(
@@ -3612,7 +3614,7 @@ class TestSalesInvoice(ERPNextTestSuite):
 		frappe.db.get_all(
 			"Payment Ledger Entry",
 			filters={"against_voucher_no": si.name, "delinked": 0},
-			fields=["sum(amount), sum(amount_in_account_currency)"],
+			fields=[{"SUM": "amount"}, {"SUM": "amount_in_account_currency"}],
 			as_list=1,
 		)
 
@@ -3980,29 +3982,29 @@ class TestSalesInvoice(ERPNextTestSuite):
 			target_doc=si,
 			args=json.dumps({"customer": dn1.customer, "merge_taxes": 1, "filtered_children": []}),
 		)
-		si.save().submit()
+		si.save()
 
 		expected = [
 			{
 				"charge_type": "Actual",
 				"account_head": "Freight and Forwarding Charges - _TC",
 				"tax_amount": 120.0,
-				"total": 1520.0,
-				"base_total": 1520.0,
+				"total": 1620.0,
+				"base_total": 1620.0,
 			},
 			{
 				"charge_type": "Actual",
 				"account_head": "Marketing Expenses - _TC",
 				"tax_amount": 150.0,
-				"total": 1670.0,
-				"base_total": 1670.0,
+				"total": 1770.0,
+				"base_total": 1770.0,
 			},
 			{
 				"charge_type": "Actual",
 				"account_head": "Miscellaneous Expenses - _TC",
 				"tax_amount": 60.0,
-				"total": 1610.0,
-				"base_total": 1610.0,
+				"total": 1830.0,
+				"base_total": 1830.0,
 			},
 		]
 		actual = [

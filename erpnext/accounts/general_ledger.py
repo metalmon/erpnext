@@ -20,7 +20,7 @@ from erpnext.accounts.doctype.accounting_dimension_filter.accounting_dimension_f
 )
 from erpnext.accounts.doctype.accounting_period.accounting_period import ClosedAccountingPeriod
 from erpnext.accounts.doctype.budget.budget import validate_expense_against_budget
-from erpnext.accounts.utils import create_payment_ledger_entry
+from erpnext.accounts.utils import create_payment_ledger_entry, is_immutable_ledger_enabled
 from erpnext.controllers.budget_controller import BudgetValidation
 from erpnext.exceptions import InvalidAccountDimensionError, MandatoryAccountDimensionError
 
@@ -35,7 +35,7 @@ def make_gl_entries(
 ):
 	if gl_map:
 		if (
-			frappe.get_single_value("Accounts Settings", "use_new_budget_controller")
+			not cint(frappe.get_single_value("Accounts Settings", "use_legacy_budget_controller"))
 			and gl_map[0].voucher_type != "Period Closing Voucher"
 		):
 			bud_val = BudgetValidation(gl_map=gl_map)
@@ -159,6 +159,7 @@ def validate_accounting_period(gl_map):
 		WHERE
 			ap.name = cd.parent
 			AND ap.company = %(company)s
+			AND ap.disabled = 0
 			AND cd.closed = 1
 			AND cd.document_type = %(voucher_type)s
 			AND %(date)s between ap.start_date and ap.end_date
@@ -300,7 +301,9 @@ def merge_similar_entries(gl_map, precision=None):
 	company_currency = erpnext.get_company_currency(company)
 
 	if not precision:
-		precision = get_field_precision(frappe.get_meta("GL Entry").get_field("debit"), company_currency)
+		precision = get_field_precision(
+			frappe.get_meta("GL Entry").get_field("debit"), currency=company_currency
+		)
 
 	# filter zero debit and credit entries
 	merged_gl_map = filter(
@@ -403,7 +406,7 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 
 	dimension_filter_map = get_dimension_filter_map()
 	if gl_map:
-		check_freezing_date(gl_map[0]["posting_date"], adv_adj)
+		check_freezing_date(gl_map[0]["posting_date"], gl_map[0]["company"], adv_adj)
 		is_opening = any(d.get("is_opening") == "Yes" for d in gl_map)
 		if gl_map[0]["voucher_type"] != "Period Closing Voucher":
 			validate_against_pcv(is_opening, gl_map[0]["posting_date"], gl_map[0]["company"])
@@ -659,6 +662,7 @@ def make_reverse_gl_entries(
 	adv_adj=False,
 	update_outstanding="Yes",
 	partial_cancel=False,
+	posting_date=None,
 ):
 	"""
 	Get original gl entries of the voucher
@@ -756,12 +760,14 @@ def make_reverse_gl_entries(
 			if immutable_ledger_enabled:
 				new_gle["is_cancelled"] = 0
 				new_gle["posting_date"] = frappe.form_dict.get("posting_date") or getdate()
+			elif posting_date:
+				new_gle["posting_date"] = posting_date
 
 			if new_gle["debit"] or new_gle["credit"]:
 				make_entry(new_gle, adv_adj, "Yes")
 
 
-def check_freezing_date(posting_date, adv_adj=False):
+def check_freezing_date(posting_date, company, adv_adj=False):
 	"""
 	Nobody can do GL Entries where posting date is before freezing date
 	except authorized person
@@ -770,17 +776,17 @@ def check_freezing_date(posting_date, adv_adj=False):
 	Hence stop admin to bypass if accounts are freezed
 	"""
 	if not adv_adj:
-		acc_frozen_upto = frappe.get_single_value("Accounts Settings", "acc_frozen_upto")
-		if acc_frozen_upto:
-			frozen_accounts_modifier = frappe.get_single_value(
-				"Accounts Settings", "frozen_accounts_modifier"
+		acc_frozen_till_date = frappe.db.get_value("Company", company, "accounts_frozen_till_date")
+		if acc_frozen_till_date:
+			frozen_accounts_modifier = frappe.db.get_value(
+				"Company", company, "role_allowed_for_frozen_entries"
 			)
-			if getdate(posting_date) <= getdate(acc_frozen_upto) and (
+			if getdate(posting_date) <= getdate(acc_frozen_till_date) and (
 				frozen_accounts_modifier not in frappe.get_roles() or frappe.session.user == "Administrator"
 			):
 				frappe.throw(
 					_("You are not authorized to add or update entries before {0}").format(
-						formatdate(acc_frozen_upto)
+						formatdate(acc_frozen_till_date)
 					)
 				)
 
@@ -849,7 +855,3 @@ def validate_allowed_dimensions(gl_entry, dimension_filter_map):
 						),
 						InvalidAccountDimensionError,
 					)
-
-
-def is_immutable_ledger_enabled():
-	return frappe.get_single_value("Accounts Settings", "enable_immutable_ledger")
