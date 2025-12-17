@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: ERPNext VERSION\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-12-15 12:47+0000\n"
-"PO-Revision-Date: 2025-12-15 16:32+0300\n"
+"PO-Revision-Date: 2025-12-15 20:43+0300\n"
 "Last-Translator: AlexKuzin <dev@olimpicfresh.ru>\n"
 "Language-Team: info@erpnext.com\n"
 "Language: ru\n"
@@ -557,8 +557,7 @@ msgstr "Строка #{0}: Пакет {1} на складе {2} имеет не�
 #. Accounts'
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
 #, python-format
-msgid ""
-"<br>\n"
+msgid "<br>\n"
 "<h4>Note</h4>\n"
 "<ul>\n"
 "<li>\n"
@@ -574,8 +573,7 @@ msgid ""
 "<pre><code>Hello {{ customer.customer_name }},<br>PFA your Statement Of Accounts from {{ doc.from_date }} to {{ doc.to_date }}.</code> </pre></li>\n"
 "</ul>\n"
 "<!-- {% endraw %} -->"
-msgstr ""
-"<br>\n"
+msgstr "<br>\n"
 "<h4>Заметка</h4>\n"
 "<ul>\n"
 "<li>Вы можете использовать <a href=«https://jinja.palletsprojects.com/en/2.11.x/» target=«_blank»>теги Jinja</a> в полях <b>Subject</b> и <b>Body</b> для динамических значений.</li><li>Все поля в этом типе документа доступны в объекте <b>doc</b> , а все поля для клиента, которому будет отправляться почта, доступны в объекте  <b>customer</b> .</li></ul>\n"
@@ -608,26 +606,22 @@ msgstr "<div class=«text-muted text-center»>{0}</div>"
 
 #. Content of the 'settings' (HTML) field in DocType 'Cheque Print Template'
 #: erpnext/accounts/doctype/cheque_print_template/cheque_print_template.json
-msgid ""
-"<div>\n"
+msgid "<div>\n"
 "<h3> All dimensions in centimeter only </h3>\n"
 "</div>"
-msgstr ""
-"<div>\n"
+msgstr "<div>\n"
 "<h3> Все размеры только в сантиметрах </h3>\n"
 "</div>"
 
 #. Content of the 'about' (HTML) field in DocType 'Product Bundle'
 #: erpnext/selling/doctype/product_bundle/product_bundle.json
-msgid ""
-"<h3>About Product Bundle</h3>\n"
+msgid "<h3>About Product Bundle</h3>\n"
 "\n"
 "<p>Aggregate group of <b>Items</b> into another <b>Item</b>. This is useful if you are bundling a certain <b>Items</b> into a package and you maintain stock of the packed <b>Items</b> and not the aggregate <b>Item</b>.</p>\n"
 "<p>The package <b>Item</b> will have <code>Is Stock Item</code> as <b>No</b> and <code>Is Sales Item</code> as <b>Yes</b>.</p>\n"
 "<h4>Example:</h4>\n"
 "<p>If you are selling Laptops and Backpacks separately and have a special price if the customer buys both, then the Laptop + Backpack will be a new Product Bundle Item.</p>"
-msgstr ""
-"<h3>О наборе продуктов</h3>\n"
+msgstr "<h3>О наборе продуктов</h3>\n"
 "\n"
 "<p>Агрегируйте группу <b>элементов</b> в другой <b>элемент</b>. Это полезно, если вы объединяете определенные <b>Товары</b> в упаковку и сохраняете запасы упакованных <b>Товаров</b> , а не совокупного <b>Товара</b>.</p>\n"
 "<p><b>Элемент</b> пакета будет иметь значение <code>Является товаром запаса</code> <b>Нет</b> и значение <code>Является товаром для продажи</code> <b>Да</b>.</p>\n"
@@ -636,13 +630,11 @@ msgstr ""
 
 #. Content of the 'Help' (HTML) field in DocType 'Currency Exchange Settings'
 #: erpnext/accounts/doctype/currency_exchange_settings/currency_exchange_settings.json
-msgid ""
-"<h3>Currency Exchange Settings Help</h3>\n"
+msgid "<h3>Currency Exchange Settings Help</h3>\n"
 "<p>There are 3 variables that could be used within the endpoint, result key and in values of the parameter.</p>\n"
 "<p>Exchange rate between {from_currency} and {to_currency} on {transaction_date} is fetched by the API.</p>\n"
 "<p>Example: If your endpoint is exchange.com/2021-08-01, then, you will have to input exchange.com/{transaction_date}</p>"
-msgstr ""
-"<h3>Справка по настройкам обмена валют</h3>\n"
+msgstr "<h3>Справка по настройкам обмена валют</h3>\n"
 "<p>Существует 3 переменные, которые можно использовать в конечной точке, ключе результата и в значениях параметра.</p>\n"
 "<p>Обменный курс между {from_currency} и {to_currency} далее {transaction_date} извлекается API.</p>\n"
 "<p>Пример: Если ваша конечная точка находится в exchange.com/2021-08-01, то вам придется ввести exchange.com/{transaction_date}</p>"
@@ -650,8 +642,7 @@ msgstr ""
 #. Content of the 'Body and Closing Text Help' (HTML) field in DocType 'Dunning
 #. Letter Text'
 #: erpnext/accounts/doctype/dunning_letter_text/dunning_letter_text.json
-msgid ""
-"<h4>Body Text and Closing Text Example</h4>\n"
+msgid "<h4>Body Text and Closing Text Example</h4>\n"
 "\n"
 "<div>We have noticed that you have not yet paid invoice {{sales_invoice}} for {{frappe.db.get_value(\"Currency\", currency, \"symbol\")}} {{outstanding_amount}}. This is a friendly reminder that the invoice was due on {{due_date}}. Please pay the amount due immediately to avoid any further dunning cost.</div>\n"
 "\n"
@@ -662,8 +653,7 @@ msgid ""
 "<h4>Templating</h4>\n"
 "\n"
 "<p>Templates are compiled using the Jinja Templating Language. To learn more about Jinja, <a class=\"strong\" href=\"http://jinja.pocoo.org/docs/dev/templates/\">read this documentation.</a></p>"
-msgstr ""
-"<h4>Пример основного текста и закрывающего текста</h4>\n"
+msgstr "<h4>Пример основного текста и закрывающего текста</h4>\n"
 "\n"
 "<div>Мы заметили, что вы еще не оплатили счет {{sales_invoice}} за {{frappe.db.get_value(«Валюта», валюта, «символ»)}} {{outstanding_amount}}. Это дружеское напоминание о том, что счет должен был быть оплачен . {{due_date}} Пожалуйста, оплатите причитающуюся сумму немедленно, чтобы избежать дальнейших расходов на напоминание.</div>\n"
 "\n"
@@ -678,8 +668,7 @@ msgstr ""
 #. Content of the 'Contract Template Help' (HTML) field in DocType 'Contract
 #. Template'
 #: erpnext/crm/doctype/contract_template/contract_template.json
-msgid ""
-"<h4>Contract Template Example</h4>\n"
+msgid "<h4>Contract Template Example</h4>\n"
 "\n"
 "<pre>Contract for Customer {{ party_name }}\n"
 "\n"
@@ -694,8 +683,7 @@ msgid ""
 "<h4>Templating</h4>\n"
 "\n"
 "<p>Templates are compiled using the Jinja Templating Language. To learn more about Jinja, <a class=\"strong\" href=\"http://jinja.pocoo.org/docs/dev/templates/\">read this documentation.</a></p>"
-msgstr ""
-"<h4>Пример шаблона контракта</h4>\n"
+msgstr "<h4>Пример шаблона контракта</h4>\n"
 "\n"
 "<pre>Контракт для клиента {{ party_name }}\n"
 "\n"
@@ -714,8 +702,7 @@ msgstr ""
 #. Content of the 'Terms and Conditions Help' (HTML) field in DocType 'Terms
 #. and Conditions'
 #: erpnext/setup/doctype/terms_and_conditions/terms_and_conditions.json
-msgid ""
-"<h4>Standard Terms and Conditions Example</h4>\n"
+msgid "<h4>Standard Terms and Conditions Example</h4>\n"
 "\n"
 "<pre>Delivery Terms for Order number {{ name }}\n"
 "\n"
@@ -730,8 +717,7 @@ msgid ""
 "<h4>Templating</h4>\n"
 "\n"
 "<p>Templates are compiled using the Jinja Templating Language. To learn more about Jinja, <a class=\"strong\" href=\"http://jinja.pocoo.org/docs/dev/templates/\">read this documentation.</a></p>"
-msgstr ""
-"<h4>Пример стандартных правил и условий</h4>\n"
+msgstr "<h4>Пример стандартных правил и условий</h4>\n"
 "\n"
 "<pre>Условия доставки для номера заказа {{ name }}\n"
 "\n"
@@ -795,8 +781,7 @@ msgstr "<p>Следующие {0} не принадлежат компании {
 
 #. Content of the 'html_llwp' (HTML) field in DocType 'Request for Quotation'
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.json
-msgid ""
-"<p>In your <b>Email Template</b>, you can use the following special variables:\n"
+msgid "<p>In your <b>Email Template</b>, you can use the following special variables:\n"
 "</p>\n"
 "<ul>\n"
 "        <li>\n"
@@ -816,8 +801,7 @@ msgid ""
 "    </ul>\n"
 "<p></p>\n"
 "<p>Apart from these, you can access all values in this RFQ, like <code>{{ message_for_supplier }}</code> or <code>{{ terms }}</code>.</p>"
-msgstr ""
-"<p><b>В шаблоне письма</b> вы можете использовать следующие специальные переменные:</p>\n"
+msgstr "<p><b>В шаблоне письма</b> вы можете использовать следующие специальные переменные:</p>\n"
 "<ul>\n"
 "        <li>\n"
 "            <code>{{ update_password_link }}</code>: ссылка, по которой поставщик может установить новый пароль для входа на ваш портал.        </li>\n"
@@ -851,8 +835,7 @@ msgstr "<p>Чтобы разрешить выставление счетов з�
 #. Content of the 'Message Examples' (HTML) field in DocType 'Payment Gateway
 #. Account'
 #: erpnext/accounts/doctype/payment_gateway_account/payment_gateway_account.json
-msgid ""
-"<pre><h5>Message Example</h5>\n"
+msgid "<pre><h5>Message Example</h5>\n"
 "\n"
 "&lt;p&gt; Thank You for being a part of {{ doc.company }}! We hope you are enjoying the service.&lt;/p&gt;\n"
 "\n"
@@ -863,8 +846,7 @@ msgid ""
 "&lt;a href=\"{{ payment_url }}\"&gt; click here to pay &lt;/a&gt;\n"
 "\n"
 "</pre>\n"
-msgstr ""
-"<pre><h5>Пример сообщения</h5>\n"
+msgstr "<pre><h5>Пример сообщения</h5>\n"
 "\n"
 "&lt;p&gt; Спасибо, что вы являетесь частью {{ doc.company }}! Мы надеемся, что вам понравилась услуга.&lt;/p&gt;\n"
 "\n"
@@ -878,8 +860,7 @@ msgstr ""
 
 #. Content of the 'Message Examples' (HTML) field in DocType 'Payment Request'
 #: erpnext/accounts/doctype/payment_request/payment_request.json
-msgid ""
-"<pre><h5>Message Example</h5>\n"
+msgid "<pre><h5>Message Example</h5>\n"
 "\n"
 "&lt;p&gt;Dear {{ doc.contact_person }},&lt;/p&gt;\n"
 "\n"
@@ -888,8 +869,7 @@ msgid ""
 "&lt;a href=\"{{ payment_url }}\"&gt; click here to pay &lt;/a&gt;\n"
 "\n"
 "</pre>\n"
-msgstr ""
-"<pre><h5>Пример сообщения</h5>\n"
+msgstr "<pre><h5>Пример сообщения</h5>\n"
 "\n"
 "&lt;p&gt;Уважаемый {{ doc.contact_person }},&lt;/p&gt;\n"
 "\n"
@@ -950,16 +930,14 @@ msgstr "<span class=«h4»><b>Ярлыки</b></span>"
 
 #. Header text in the Settings Workspace
 #: erpnext/setup/workspace/settings/settings.json
-msgid ""
-"<span class=\"h4\"><b>Your Shortcuts\n"
+msgid "<span class=\"h4\"><b>Your Shortcuts\n"
 "\t\t\t\n"
 "\t\t\n"
 "\t\t\t\n"
 "\t\t\n"
 "\t\t\t\n"
 "\t\t</b></span>"
-msgstr ""
-"<span class=«h4»><b>Ваши ссылки\n"
+msgstr "<span class=«h4»><b>Ваши ссылки\n"
 "\t\t\t\n"
 "\t\t\n"
 "\t\t\t\n"
@@ -1006,8 +984,7 @@ msgstr "<strong>Сумма задолженности:</strong> {0}"
 
 #. Content of the 'html_19' (HTML) field in DocType 'Inventory Dimension'
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
-msgid ""
-"<table class=\"table table-bordered table-condensed\">\n"
+msgid "<table class=\"table table-bordered table-condensed\">\n"
 "<thead>\n"
 "  <tr>\n"
 "         <th class=\"table-sr\" style=\"width: 50%;\">Child Document</th>\n"
@@ -1042,8 +1019,7 @@ msgid ""
 "\n"
 "\n"
 "\n"
-msgstr ""
-"<table class=«table table-bordered table-condensed»>\n"
+msgstr "<table class=«table table-bordered table-condensed»>\n"
 "<thead>\n"
 "  <tr>\n"
 "         <th class=«table-sr» style=«width: 50%;»>Детский документ</th>\n"
@@ -2976,14 +2952,12 @@ msgid "Additional Transferred Qty"
 msgstr "Дополнительно переданное количество"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:665
-msgid ""
-"Additional Transferred Qty {0}\n"
+msgid "Additional Transferred Qty {0}\n"
 "\t\t\t\t\tcannot be greater than {1}.\n"
 "\t\t\t\t\tTo fix this, increase the percentage value\n"
 "\t\t\t\t\tof the field 'Transfer Extra Raw Materials to WIP'\n"
 "\t\t\t\t\tin Manufacturing Settings."
-msgstr ""
-"Дополнительное количество ({0})\n"
+msgstr "Дополнительное количество ({0})\n"
 "\t\t\t\t\tне может превышать {1}.\n"
 "\t\t\t\t\tЧтобы исправить это, увеличьте процентное значение\n"
 "\t\t\t\t\tполя «Передача дополнительных сырьевых материалов на МПЗ»\n"
@@ -5604,7 +5578,7 @@ msgstr "Стоимость актива скорректирована посл�
 #: erpnext/assets/workspace/assets/assets.json erpnext/desktop_icon/assets.json
 #: erpnext/workspace_sidebar/assets.json
 msgid "Assets"
-msgstr "Основные средства"
+msgstr "Активы"
 
 #: erpnext/controllers/buying_controller.py:1038
 msgid "Assets not created for {item_code}. You will have to create asset manually."
@@ -12181,19 +12155,15 @@ msgid "Creation of <b><a href='/app/{0}'>{1}(s)</a></b> successful"
 msgstr "Создание <b><a href=«/app/{0}»>{1}</a></b> успешно завершено"
 
 #: erpnext/utilities/bulk_transaction.py:227
-msgid ""
-"Creation of {0} failed.\n"
+msgid "Creation of {0} failed.\n"
 "\t\t\t\tCheck <b><a href=\"/app/bulk-transaction-log\">Bulk Transaction Log</a></b>"
-msgstr ""
-"Создание {0} не удалось.\n"
+msgstr "Создание {0} не удалось.\n"
 "\t\t\t\tПроверьте <b><a href=«/app/bulk-transaction-log»>Журнал пакетных операций</a></b>"
 
 #: erpnext/utilities/bulk_transaction.py:218
-msgid ""
-"Creation of {0} partially successful.\n"
+msgid "Creation of {0} partially successful.\n"
 "\t\t\t\tCheck <b><a href=\"/app/bulk-transaction-log\">Bulk Transaction Log</a></b>"
-msgstr ""
-"Создание {0} частично успешно завершено.\n"
+msgstr "Создание {0} частично успешно завершено.\n"
 "\t\t\t\tПроверьте <b><a href=«/app/bulk-transaction-log»>Журнал пакетных операций</a></b>"
 
 #. Option for the 'Balance must be' (Select) field in DocType 'Account'
@@ -17047,12 +17017,10 @@ msgid "Enter the Bank Guarantee Number before submitting."
 msgstr "Введите номер банковской гарантии перед отправкой."
 
 #: erpnext/manufacturing/doctype/routing/routing.js:93
-msgid ""
-"Enter the Operation, the table will fetch the Operation details like Hourly Rate, Workstation automatically.\n"
+msgid "Enter the Operation, the table will fetch the Operation details like Hourly Rate, Workstation automatically.\n"
 "\n"
 " After that, set the Operation Time in minutes and the table will calculate the Operation Costs based on the Hourly Rate and Operation Time."
-msgstr ""
-"Введите операцию, таблица автоматически подтянет детали операции, такие как почасовая ставка и рабочее место. \n"
+msgstr "Введите операцию, таблица автоматически подтянет детали операции, такие как почасовая ставка и рабочее место. \n"
 "\n"
 "После этого установите время операции в минутах, и таблица рассчитает себестоимость операции на основе почасовой ставки и времени операции."
 
@@ -17170,12 +17138,10 @@ msgid "Error: Not a valid id?"
 msgstr "Ошибка: Неверный идентификатор?"
 
 #: erpnext/assets/doctype/asset_depreciation_schedule/deppreciation_schedule_controller.py:176
-msgid ""
-"Error: This asset already has {0} depreciation periods booked.\n"
+msgid "Error: This asset already has {0} depreciation periods booked.\n"
 "\t\t\t\t\tThe `depreciation start` date must be at least {1} periods after the `available for use` date.\n"
 "\t\t\t\t\tPlease correct the dates accordingly."
-msgstr ""
-"Ошибка: По этому активу уже забронировано {0} периодов амортизации.\n"
+msgstr "Ошибка: По этому активу уже забронировано {0} периодов амортизации.\n"
 "\t\t\t\t\tДата `начала амортизации` должна быть как минимум {1} периодом после даты `доступности для использования`.\n"
 "\t\t\t\t\tПожалуйста, исправьте даты соответствующим образом."
 
@@ -17231,11 +17197,9 @@ msgstr "Пример связанного документа: {0}"
 
 #. Description of the 'Serial Number Series' (Data) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
-msgid ""
-"Example: ABCD.#####\n"
+msgid "Example: ABCD.#####\n"
 "If series is set and Serial No is not mentioned in transactions, then automatic serial number will be created based on this series. If you always want to explicitly mention Serial Nos for this item. leave this blank."
-msgstr ""
-"Пример: ABCD.#####\n"
+msgstr "Пример: ABCD.#####\n"
 "Если серия установлена, а серийный номер не указан в транзакциях, то автоматический серийный номер будет создан на основе этой серии. Если Вы всегда хотите явно указывать серийный номер для данного товара, оставьте это поле пустым."
 
 #. Description of the 'Batch Number Series' (Data) field in DocType 'Item'
@@ -20699,11 +20663,9 @@ msgstr "Если выбран параметр «Месяцы», фиксиро�
 #. Description of the 'Reconcile on Advance Payment Date' (Check) field in
 #. DocType 'Company'
 #: erpnext/setup/doctype/company/company.json
-msgid ""
-"If <b>Enabled</b> - Reconciliation happens on the <b>Advance Payment posting date</b><br>\n"
+msgid "If <b>Enabled</b> - Reconciliation happens on the <b>Advance Payment posting date</b><br>\n"
 "If <b>Disabled</b> - Reconciliation happens on oldest of 2 Dates: <b>Invoice Date</b> or the <b>Advance Payment posting date</b><br>\n"
-msgstr ""
-"Если <b>Включено</b> - Сверка происходит по дате <b>проведения авансового платежа</b><br>\n"
+msgstr "Если <b>Включено</b> - Сверка происходит по дате <b>проведения авансового платежа</b><br>\n"
 "Если <b>Отключено</b> - Сверка происходит по более ранней из двух дат: <b>дате счета</b> или <b>дате проведения авансового платежа</b><br>\n"
 
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.js:14
@@ -20811,29 +20773,24 @@ msgstr "Если эта опция включена, все файлы, прик
 #. Description of the 'Do Not Update Serial / Batch on Creation of Auto Bundle'
 #. (Check) field in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
-msgid ""
-"If enabled, do not update serial / batch values in the stock transactions on creation of auto Serial \n"
+msgid "If enabled, do not update serial / batch values in the stock transactions on creation of auto Serial \n"
 " / Batch Bundle. "
 msgstr "Если включено, не обновлять значения серийных/партийных номеров в операциях со складом при автоматическом создании комплекта с серийными/партийными номерами. "
 
 #. Description of the 'Consider Projected Qty in Calculation' (Check) field in
 #. DocType 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
-msgid ""
-"If enabled, formula for <b>Qty to Order</b>: <br>\n"
+msgid "If enabled, formula for <b>Qty to Order</b>: <br>\n"
 "Required Qty (BOM) - <a href=\"https://docs.frappe.io/erpnext/user/manual/en/projected-quantity\">Projected Qty</a>. <br> This helps avoid over-ordering."
-msgstr ""
-"Если включено, формула для <b>количества к заказу</b>: <br>\n"
+msgstr "Если включено, формула для <b>количества к заказу</b>: <br>\n"
 "Требуемое количество - <a href=\"https://docs.frappe.io/erpnext/user/manual/en/projected-quantity\">Прогнозируемое количество</a>. <br> Это поможет избежать переизбытка заказов."
 
 #. Description of the 'Consider Projected Qty in Calculation (RM)' (Check)
 #. field in DocType 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
-msgid ""
-"If enabled, formula for <b>Required Qty</b>: <br>\n"
+msgid "If enabled, formula for <b>Required Qty</b>: <br>\n"
 "Required Qty (BOM) - <a href=\"https://docs.frappe.io/erpnext/user/manual/en/projected-quantity\">Projected Qty</a>. <br> This helps avoid over-ordering."
-msgstr ""
-"Если включено, формула для <b>Требуемого количества</b>: <br>\n"
+msgstr "Если включено, формула для <b>Требуемого количества</b>: <br>\n"
 "Требуемое количество - <a href=\"https://docs.frappe.io/erpnext/user/manual/en/projected-quantity\">Прогнозируемое количество</a>. <br> Это поможет избежать избыточного заказа."
 
 #. Description of the 'Create Ledger Entries for Change Amount' (Check) field
@@ -25664,11 +25621,9 @@ msgstr "Оплачиваемый отпуск?"
 #. Description of the 'Success Redirect URL' (Data) field in DocType
 #. 'Appointment Booking Settings'
 #: erpnext/crm/doctype/appointment_booking_settings/appointment_booking_settings.json
-msgid ""
-"Leave blank for home.\n"
+msgid "Leave blank for home.\n"
 "This is relative to site URL, for example \"about\" will redirect to \"https://yoursitename.com/about\""
-msgstr ""
-"Оставьте пустым для домашнего сайта.\n"
+msgstr "Оставьте пустым для домашнего сайта.\n"
 "Это относительно URL сайта, например, «about» будет перенаправлено на «https://yoursitename.com/about»"
 
 #. Description of the 'Release Date' (Date) field in DocType 'Supplier'
@@ -29723,11 +29678,9 @@ msgstr "Только для использования при входящем �
 #. Description of the 'Rounding Loss Allowance' (Float) field in DocType
 #. 'Exchange Rate Revaluation'
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
-msgid ""
-"Only values between [0,1) are allowed. Like {0.00, 0.04, 0.09, ...}\n"
+msgid "Only values between [0,1) are allowed. Like {0.00, 0.04, 0.09, ...}\n"
 "Ex: If allowance is set at 0.07, accounts that have balance of 0.07 in either of the currencies will be considered as zero balance account"
-msgstr ""
-"Допускаются только значения в диапазоне [0,1). Например, {0,00; 0,04; 0,09; ...}\n"
+msgstr "Допускаются только значения в диапазоне [0,1). Например, {0,00; 0,04; 0,09; ...}\n"
 "Пример: Если допуск установлен на уровне 0,07, счета, имеющие остаток 0,07 в любой из валют, будут считаться счетами с нулевым балансом"
 
 #: erpnext/accounts/doctype/unreconcile_payment/unreconcile_payment.py:43
@@ -32818,11 +32771,9 @@ msgstr "Ежедневно"
 #. Description of the 'Total Workstation Time (In Hours)' (Int) field in
 #. DocType 'Item Lead Time'
 #: erpnext/stock/doctype/item_lead_time/item_lead_time.json
-msgid ""
-"Per Day\n"
+msgid "Per Day\n"
 "Shift Time (In Hours) * No of Workstations * No of Shift"
-msgstr ""
-"Ежедневно\n"
+msgstr "Ежедневно\n"
 "Время смены (часы) * Кол-во рабочих мест * Кол-во смен"
 
 #. Option for the 'Evaluation Period' (Select) field in DocType 'Supplier
@@ -39348,8 +39299,7 @@ msgstr "Заменить спецификацию"
 
 #. Description of a DocType
 #: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.json
-msgid ""
-"Replace a particular BOM in all other BOMs where it is used. It will replace the old BOM link, update cost and regenerate \"BOM Explosion Item\" table as per new BOM.\n"
+msgid "Replace a particular BOM in all other BOMs where it is used. It will replace the old BOM link, update cost and regenerate \"BOM Explosion Item\" table as per new BOM.\n"
 "It also updates latest price in all the BOMs."
 msgstr "Заменить определенную спецификацию во всех остальных спецификациях, где она используется. Будет заменена ссылка на старую спецификацию, обновлена себестоимость и пересчитана таблица «Деталировка спецификации» в соответствии с новой спецификацией."
 
@@ -41245,13 +41195,11 @@ msgid "Row #{0}: Scrap Item Qty cannot be zero"
 msgstr "Строка #{0}: Количество брака не может быть равно нулю"
 
 #: erpnext/controllers/selling_controller.py:283
-msgid ""
-"Row #{0}: Selling rate for item {1} is lower than its {2}.\n"
+msgid "Row #{0}: Selling rate for item {1} is lower than its {2}.\n"
 "\t\t\t\t\tSelling {3} should be atleast {4}.<br><br>Alternatively,\n"
 "\t\t\t\t\tyou can disable selling price validation in {5} to bypass\n"
 "\t\t\t\t\tthis validation."
-msgstr ""
-"Строка #{0}: Уровень продаж товара {1} ниже, чем его {2}.\n"
+msgstr "Строка #{0}: Уровень продаж товара {1} ниже, чем его {2}.\n"
 "\t\t\t\t\tЦена продажи {3} должна быть не ниже {4}.<br><br>В качестве альтернативы,\n"
 "\t\t\t\t\tвы можете отключить проверку продажной цены в {5}, чтобы обойти эту проверку."
 
@@ -41570,8 +41518,7 @@ msgid "Row {0}: Both Debit and Credit values cannot be zero"
 msgstr "Строка {0}:  Значения Дебета и Кредита не могут быть одновременно равны нулю"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:550
-msgid ""
-"Row {0}: Consumed Qty {1} {2} must be less than or equal to Available Qty For Consumption\n"
+msgid "Row {0}: Consumed Qty {1} {2} must be less than or equal to Available Qty For Consumption\n"
 "\t\t\t\t\t{3} {4} in Consumed Items Table."
 msgstr "Строка {0}: Потребленное количество {1} {2} не должно превышать доступное количество для потребления {3} {4} в таблице «Потребленные позиции»."
 
@@ -43062,12 +43009,10 @@ msgstr "Действия Карточки Оценки"
 #. Description of the 'Weighting Function' (Small Text) field in DocType
 #. 'Supplier Scorecard'
 #: erpnext/buying/doctype/supplier_scorecard/supplier_scorecard.json
-msgid ""
-"Scorecard variables can be used, as well as:\n"
+msgid "Scorecard variables can be used, as well as:\n"
 "{total_score} (the total score from that period),\n"
 "{period_number} (the number of periods to present day)\n"
-msgstr ""
-"В качестве переменных могут использоваться:\n"
+msgstr "В качестве переменных могут использоваться:\n"
 "{total_score} (суммарный балл за указанный период),\n"
 "{period_number} (количество периодов с начала отсчета)\n"
 
@@ -43563,8 +43508,7 @@ msgid "Select variant item code for the template item {0}"
 msgstr "Выберите код варианта для шаблона номенклатуры {0}"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:707
-msgid ""
-"Select whether to get items from a Sales Order or a Material Request. For now select <b>Sales Order</b>.\n"
+msgid "Select whether to get items from a Sales Order or a Material Request. For now select <b>Sales Order</b>.\n"
 " A Production Plan can also be created manually where you can select the Items to manufacture."
 msgstr "Выберите, брать ли позиции из заказа клиента или заявки на материалы. Сейчас выберите <B>Заказ клиента</B>.<br>План производства также можно создать вручную, выбрав необходимые для производства позиции."
 
@@ -45356,8 +45300,7 @@ msgstr "Простое выражение Python, Пример: territory != «�
 #. 'Quality Inspection Reading'
 #: erpnext/stock/doctype/item_quality_inspection_parameter/item_quality_inspection_parameter.json
 #: erpnext/stock/doctype/quality_inspection_reading/quality_inspection_reading.json
-msgid ""
-"Simple Python formula applied on Reading fields.<br> Numeric eg. 1: <b>reading_1 &gt; 0.2 and reading_1 &lt; 0.5</b><br>\n"
+msgid "Simple Python formula applied on Reading fields.<br> Numeric eg. 1: <b>reading_1 &gt; 0.2 and reading_1 &lt; 0.5</b><br>\n"
 "Numeric eg. 2: <b>mean &gt; 3.5</b> (mean of populated fields)<br>\n"
 "Value based eg.:  <b>reading_value in (\"A\", \"B\", \"C\")</b>"
 msgstr "Простая формула Python, применяемая к полям показаний.<br>Численный пример 1: <b>показание_1 &gt; 0,2 и показание_1 &lt; 0,5</b><br>Численный пример 2: <b>среднее &gt; 3,5</b> (среднее значение заполненных полей)<br>Пример на основе значения: <b>значение_показания в («A», «B», «C»)</b>"
@@ -48025,11 +47968,9 @@ msgstr "Система автоматически создаст серийны�
 #. Description of the 'Allow Implicit Pegged Currency Conversion' (Check) field
 #. in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
-msgid ""
-"System will do an implicit conversion using the pegged currency. <br>\n"
+msgid "System will do an implicit conversion using the pegged currency. <br>\n"
 "Ex: Instead of AED -&gt; INR, system will do AED -&gt; USD -&gt; INR using the pegged exchange rate of AED against USD."
-msgstr ""
-"Система выполнит неявную конвертацию с использованием привязанной валюты. <br>\n"
+msgstr "Система выполнит неявную конвертацию с использованием привязанной валюты. <br>\n"
 "Например: вместо AED -&gt; INR система выполнит AED -&gt; USD -&gt; INR, используя привязанный курс AED по отношению к USD."
 
 #. Description of the 'Invoice Limit' (Int) field in DocType 'Payment
@@ -48681,8 +48622,7 @@ msgstr "Ставки удержания налога"
 #: erpnext/buying/doctype/purchase_order_item/purchase_order_item.json
 #: erpnext/buying/doctype/supplier_quotation_item/supplier_quotation_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
-msgid ""
-"Tax detail table fetched from item master as a string and stored in this field.\n"
+msgid "Tax detail table fetched from item master as a string and stored in this field.\n"
 "Used for Taxes and Charges"
 msgstr "Таблица подробной информации о налогах, полученная из справочника номенклатуры в виде строки и сохраненная в этом поле. Используется для налогов и сборов"
 
@@ -55904,3 +55844,4 @@ msgstr "{} {} уже связан с {} {}"
 #: erpnext/accounts/doctype/bank_transaction/bank_transaction.py:347
 msgid "{} {} is not affecting bank account {}"
 msgstr "{} {} не влияет на банковский счет {}"
+
