@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: ERPNext VERSION\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-12-15 12:47+0000\n"
-"PO-Revision-Date: 2025-12-15 20:43+0300\n"
+"PO-Revision-Date: 2025-12-19 13:37+0300\n"
 "Last-Translator: AlexKuzin <dev@olimpicfresh.ru>\n"
 "Language-Team: info@erpnext.com\n"
 "Language: ru\n"
@@ -20567,7 +20567,7 @@ msgstr "Часы"
 
 #: erpnext/setup/doctype/company/company.py:484
 msgid "Human Resources"
-msgstr "Управление персоналом"
+msgstr "Персонал"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
